@@ -612,7 +612,6 @@ colnames(line_call4) <- c("SV_type","N","Caller","TP","FP","Recall","CI Recall",
 
 metrics_callers = rbind(metrics_callers,line_call4)
 
-write.csv(metrics_callers,"outputs/metrics_mid_DEL.csv",row.names = F)
 
 
 ### CV ########
@@ -667,25 +666,25 @@ spec_call_cv = round(tp_cv/(fp_cv+tp_cv)*100,3)
 f_score_cv = round((2*sens_call_cv*spec_call_cv)/(sens_call_cv+spec_call_cv)/100,3)
 
 
-# que lo detecte al menos 1 caller
+# detected by at least 1 caller
 
 det_call = my_data2_70 %>% filter(callers_detected %in% 1:9)
 
 callers1 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 2 caller y 2 estrategias a la vez
+# detected by at least 2 callers and 2 strategies
 
 det_call = my_data2_70 %>% filter(callers_detected %in% 2:9 & strategy %in% 2:6 & reciprocity >80)
 
 callers2 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 3 caller
+# detected by at least 3 callers and 2 strategies
 
 det_call = my_data2_70 %>% filter(callers_detected %in% 3:9 & strategy %in% 2:6 & reciprocity >80)
 
 callers3 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 4 caller
+# detected by at least 4 callers and 2 strategies
 
 det_call = my_data2_70 %>% filter(callers_detected %in% 4:9 & strategy %in% 2:6 & reciprocity >80)
 
@@ -732,25 +731,25 @@ spec_call_cv = round(tp_cv/(fp_cv+tp_cv)*100,3)
 f_score_cv = round((2*sens_call_cv*spec_call_cv)/(sens_call_cv+spec_call_cv)/100,3)
 
 
-# que lo detecte al menos 1 caller
+# detected by at least 1 caller
 
 det_call = my_data2_30 %>% filter(callers_detected %in% 1:9)
 
 callers1 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 2 caller y 2 estrategias a la vez
+# detected by at least 2 callers and 2 strategies
 
 det_call = my_data2_30 %>% filter(callers_detected %in% 2:9 & strategy %in% 2:6 & reciprocity >80)
 
 callers2 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 3 caller
+# detected by at least 3 callers and 2 strategies
 
 det_call = my_data2_30 %>% filter(callers_detected %in% 3:9 & strategy %in% 2:6 & reciprocity >80)
 
 callers3 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 4 caller
+# detected by at least 4 callers and 2 strategies
 
 det_call = my_data2_30 %>% filter(callers_detected %in% 4:9 & strategy %in% 2:6 & reciprocity >80)
 
