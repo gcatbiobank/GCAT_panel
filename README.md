@@ -1,4 +1,4 @@
-# GCAT|panel
+# GCAT|Panel
 
 R scripts to reproduce work from:
 
