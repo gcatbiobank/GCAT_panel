@@ -1,18 +1,13 @@
-## estudio ventana entre breakpoints, ahora está en 10, lo subimos a 50, 100, 200 y vemos sensitivity-precision de golden +-10 ventana
-
 library(data.table)
 library(dplyr)
 
-setwd("/home/jvall2/Mare_folder1/merge_all_calling_GCAT/")
-setwd("/home/igalvan/Mare_folder/")
+source("ext/functions.R")
 
-#setwd("D:/BSC/Machine_vector/SV/")
+setwd("1_LRM/mid_DEL/")
 
-source("/home/jvall2/Mare_folder1/merge_all_calling_GCAT/Deleciones/functions.R")
+# read golden (order by chr1 and chr2) ######
 
-# read golden (ordenar por chr1 y chr2) ######
-
-golden_trans = fread("/home/jvall2/Mare_folder1/merge_all_calling_GCAT/Translocaciones/Golden/insilico_data/insilico_trans",fill = T)
+golden_trans = fread("data/Insilico_TRA",fill = T)
 
 golden_trans$V1 = gsub("chr","",golden_trans$V1)
 golden_trans$V3 = gsub("chr","",golden_trans$V3)
@@ -85,7 +80,7 @@ for(i in 1:nrow(golden)){
 
 # remove intra-chromosomal variants 
 
-golden[remove_same_chr,] %>% write.table("Translocaciones/Golden/insilico_data/golden_same_chr",row.names=F,
+golden[remove_same_chr,] %>% write.table("data/Insilico_TRA_intrachromosomal",row.names=F,
                                          quote=F)
 
 golden = golden[-remove_same_chr,]
@@ -137,7 +132,7 @@ golden$end_2_golden[252] = golden$start_2_golden[252] + 1
 golden$length_golden[252] = 1
 
 
-golden_pseudo = fread("/home/jvall2/Mare_folder1/merge_all_calling_GCAT/Translocaciones/Golden/insilico_data/pseudogenes_golden")
+golden_pseudo = fread("data/Insilico_TRA_pseudogenes")
 
 golden_pseudo$V4 = nchar(golden_pseudo$V4)
 
@@ -174,616 +169,6 @@ golden = golden %>% as.data.table()
 
 head(golden)
 
-# window size sensitivity and precision #######
-
-# start and end criteria
-
-win_size = c(10,20,50,100,200,300)
-
-my_callers = expand.grid(callers = c("delly","lumpy","pindel","manta","svaba"),
-                         win_size = win_size)
-
-my_callers$sensitivity = 0
-my_callers$precision = 0
-my_callers$f.score = 0
-my_callers$g.error = 0
-
-
-k=1
-
-for(k in 2:6){
-  
-  window_between_callers = 150
-  
-  ### delly #####
-  
-  delly = fread("Translocaciones/Golden/insilico_data/delly_insilico3_modelo_translocaciones")
-  colnames(delly) = c("chr_1_delly","start_1_delly","chr_2_delly","start_2_delly","GT_delly")
-  
-  delly$chr_1_delly[delly$chr_1_delly=="X"] = "23"
-  delly$chr_1_delly[delly$chr_1_delly=="Y"] = "24"
-  delly$chr_2_delly[delly$chr_2_delly=="X"] = "23"
-  delly$chr_2_delly[delly$chr_2_delly=="Y"] = "24"
-  
-  delly$chr_1_delly = as.numeric(delly$chr_1_delly)
-  delly$chr_2_delly = as.numeric(delly$chr_2_delly)
-  
-  for(i in 1:nrow(delly)){
-    
-    if(delly$chr_1_delly[i]>delly$chr_2_delly[i]){
-      
-      chr1 = delly$chr_1_delly[i]
-      chr2 = delly$chr_2_delly[i]
-      start1 = delly$start_1_delly[i]
-      start2 = delly$start_2_delly[i]
-      
-      delly$chr_1_delly[i] = chr2
-      delly$chr_2_delly[i] = chr1
-      delly$start_1_delly[i] = start2
-      delly$start_2_delly[i] = start1
-    }
-    
-  }
-  
-  delly = unique(delly)
-  
-  delly = delly %>% arrange(chr_1_delly,chr_2_delly,
-                            start_1_delly,start_2_delly) %>% as.data.table()
-  
-  type = "translocation"
-  
-  delly$ID = "none"
-  
-  delly$ID[1] = paste0(type,"_",1)
-  
-  for(i in 2:nrow(delly)){
-    
-    if(delly$chr_1_delly[i]==delly$chr_1_delly[i-1] & delly$chr_2_delly[i]==delly$chr_2_delly[i-1] & 
-       ((abs(delly$start_1_delly[i]-delly$start_1_delly[i-1])<=window_between_callers | 
-         abs(delly$start_2_delly[i]-delly$start_2_delly[i-1])<=window_between_callers)) &
-       delly$GT_delly[i]==delly$GT_delly[i-1]){
-      
-      delly$ID[i] = paste0(delly$ID[i-1])
-    }
-    else{delly$ID[i] = paste0(type,"_",i)}
-    
-  }
-  
-  delly_ok = data.frame(ID = unique(delly$ID))
-  
-  delly_ok$chr_1_delly = 0
-  delly_ok$start_1_delly = 0
-  delly_ok$end_1_delly = 0
-  
-  delly_ok$chr_2_delly = 0
-  delly_ok$start_2_delly = 0
-  delly_ok$end_2_delly = 0
-  
-  delly_ok$GT_delly = 0
-  delly_ok$length_delly = 0
-  
-  i=1
-  
-  for(i in 1:nrow(delly_ok)){
-    
-    aux = delly %>% filter(ID==delly_ok$ID[i])
-    
-    delly_ok$chr_1_delly[i] = unique(aux$chr_1_delly)
-    delly_ok$start_1_delly[i] = min(aux$start_1_delly)
-    delly_ok$end_1_delly[i] = max(aux$start_1_delly)
-    
-    delly_ok$chr_2_delly[i] = unique(aux$chr_2_delly)
-    print(paste0(i," ",unique(aux$chr_2_delly)))
-    delly_ok$start_2_delly[i] = min(aux$start_2_delly)
-    delly_ok$end_2_delly[i] = max(aux$start_2_delly)
-    
-    delly_ok$GT_delly[i] = paste0(unique(aux$GT_delly),collapse = "")
-    delly_ok$length_delly[i] = max(c(delly_ok$end_2_delly[i]-delly_ok$start_2_delly[i],
-                                     delly_ok$end_1_delly[i]-delly_ok$start_1_delly[i]))
-    
-  }
-  
-  delly_ok$GT_delly[-which(delly_ok$GT_delly %in% c("0/1","1/1"))] = "./."
-  
-  delly_ok$lower_delly_start_1 = delly_ok$start_1_delly-win_size[k]
-  delly_ok$upper_delly_start_1 = delly_ok$start_1_delly+win_size[k]
-  delly_ok$lower_delly_start_2 = delly_ok$start_2_delly-win_size[k]
-  delly_ok$upper_delly_start_2 = delly_ok$start_2_delly+win_size[k]
-  
-  delly_ok$lower_delly_end_1 = delly_ok$end_1_delly-win_size[k]
-  delly_ok$upper_delly_end_1 = delly_ok$end_1_delly+win_size[k]
-  delly_ok$lower_delly_end_2 = delly_ok$end_2_delly-win_size[k]
-  delly_ok$upper_delly_end_2 = delly_ok$end_2_delly+win_size[k]
-  
-  delly_ok = delly_ok %>% as.data.table()
-  
-  
-  ### lumpy #####
-  
-  lumpy = fread("Translocaciones/Golden/insilico_data/lumpy_insilico3_modelo_translocaciones")
-  colnames(lumpy) = c("chr_1_lumpy","start_1_lumpy","chr_2_lumpy","start_2_lumpy","GT_lumpy")
-  
-  lumpy = lumpy %>% filter(chr_1_lumpy!="hs37d5")
-  lumpy = lumpy %>% filter(chr_2_lumpy!="hs37d5")
-  
-  lumpy$chr_1_lumpy[lumpy$chr_1_lumpy=="X"] = "23"
-  lumpy$chr_1_lumpy[lumpy$chr_1_lumpy=="Y"] = "24"
-  lumpy$chr_2_lumpy[lumpy$chr_2_lumpy=="X"] = "23"
-  lumpy$chr_2_lumpy[lumpy$chr_2_lumpy=="Y"] = "24"
-  
-  lumpy$chr_1_lumpy = as.numeric(lumpy$chr_1_lumpy)
-  lumpy$chr_2_lumpy = as.numeric(lumpy$chr_2_lumpy)
-  
-  for(i in 1:nrow(lumpy)){
-    
-    if(lumpy$chr_1_lumpy[i]>lumpy$chr_2_lumpy[i]){
-      
-      chr1 = lumpy$chr_1_lumpy[i]
-      chr2 = lumpy$chr_2_lumpy[i]
-      start1 = lumpy$start_1_lumpy[i]
-      start2 = lumpy$start_2_lumpy[i]
-      
-      lumpy$chr_1_lumpy[i] = chr2
-      lumpy$chr_2_lumpy[i] = chr1
-      lumpy$start_1_lumpy[i] = start2
-      lumpy$start_2_lumpy[i] = start1
-    }
-    
-  }
-  
-  lumpy = unique(lumpy)
-  
-  
-  lumpy = lumpy %>% arrange(chr_1_lumpy,chr_2_lumpy,
-                            start_1_lumpy,start_2_lumpy) %>% as.data.table()
-  
-  
-  type = "translocation"
-  
-  lumpy$ID = "none"
-  
-  lumpy$ID[1] = paste0(type,"_",1)
-  
-  for(i in 2:nrow(lumpy)){
-    
-    if(lumpy$chr_1_lumpy[i]==lumpy$chr_1_lumpy[i-1] & lumpy$chr_2_lumpy[i]==lumpy$chr_2_lumpy[i-1] & 
-       ((abs(lumpy$start_1_lumpy[i]-lumpy$start_1_lumpy[i-1])<=window_between_callers | 
-         abs(lumpy$start_2_lumpy[i]-lumpy$start_2_lumpy[i-1])<=window_between_callers)) &
-       lumpy$GT_lumpy[i]==lumpy$GT_lumpy[i-1]){
-      
-      lumpy$ID[i] = paste0(lumpy$ID[i-1])
-    }
-    else{lumpy$ID[i] = paste0(type,"_",i)}
-    
-  }
-  
-  lumpy_ok = data.frame(ID = unique(lumpy$ID))
-  
-  lumpy_ok$chr_1_lumpy = 0
-  lumpy_ok$start_1_lumpy = 0
-  lumpy_ok$end_1_lumpy = 0
-  
-  lumpy_ok$chr_2_lumpy = 0
-  lumpy_ok$start_2_lumpy = 0
-  lumpy_ok$end_2_lumpy = 0
-  
-  lumpy_ok$GT_lumpy = 0
-  lumpy_ok$length_lumpy = 0
-  
-  i=1
-  
-  for(i in 1:nrow(lumpy_ok)){
-    
-    aux = lumpy %>% filter(ID==lumpy_ok$ID[i])
-    
-    lumpy_ok$chr_1_lumpy[i] = unique(aux$chr_1_lumpy)
-    lumpy_ok$start_1_lumpy[i] = min(aux$start_1_lumpy)
-    lumpy_ok$end_1_lumpy[i] = max(aux$start_1_lumpy)
-    
-    lumpy_ok$chr_2_lumpy[i] = unique(aux$chr_2_lumpy)
-    lumpy_ok$start_2_lumpy[i] = min(aux$start_2_lumpy)
-    lumpy_ok$end_2_lumpy[i] = max(aux$start_2_lumpy)
-    
-    lumpy_ok$GT_lumpy[i] = paste0(unique(aux$GT_lumpy),collapse = "")
-    lumpy_ok$length_lumpy[i] = max(c(lumpy_ok$end_2_lumpy[i]-lumpy_ok$start_2_lumpy[i],
-                                     lumpy_ok$end_1_lumpy[i]-lumpy_ok$start_1_lumpy[i]))
-    
-  }
-  
-  lumpy_ok$GT_lumpy[-which(lumpy_ok$GT_lumpy %in% c("0/1","1/1"))] = "./."
-  
-  
-  lumpy_ok$lower_lumpy_start_1 = lumpy_ok$start_1_lumpy-win_size[k]
-  lumpy_ok$upper_lumpy_start_1 = lumpy_ok$start_1_lumpy+win_size[k]
-  lumpy_ok$lower_lumpy_start_2 = lumpy_ok$start_2_lumpy-win_size[k]
-  lumpy_ok$upper_lumpy_start_2 = lumpy_ok$start_2_lumpy+win_size[k]
-  
-  
-  lumpy_ok$lower_lumpy_end_1 = lumpy_ok$end_1_lumpy-win_size[k]
-  lumpy_ok$upper_lumpy_end_1 = lumpy_ok$end_1_lumpy+win_size[k]
-  lumpy_ok$lower_lumpy_end_2 = lumpy_ok$end_2_lumpy-win_size[k]
-  lumpy_ok$upper_lumpy_end_2 = lumpy_ok$end_2_lumpy+win_size[k]
-  
-  lumpy_ok = lumpy_ok %>% as.data.table()
-  
-  
-  ### pindel #####
-  
-  pindel = fread("Translocaciones/Golden/insilico_data/pindel_insilico3_modelo_translocaciones")
-  colnames(pindel) = c("chr_1_pindel","start_1_pindel","chr_2_pindel","start_2_pindel")
-  
-  pindel$chr_1_pindel[pindel$chr_1_pindel=="X"] = "23"
-  pindel$chr_1_pindel[pindel$chr_1_pindel=="Y"] = "24"
-  pindel$chr_2_pindel[pindel$chr_2_pindel=="X"] = "23"
-  pindel$chr_2_pindel[pindel$chr_2_pindel=="Y"] = "24"
-  
-  pindel$chr_1_pindel = as.numeric(pindel$chr_1_pindel)
-  pindel$chr_2_pindel = as.numeric(pindel$chr_2_pindel)
-  
-  for(i in 1:nrow(pindel)){
-    
-    if(pindel$chr_1_pindel[i]>pindel$chr_2_pindel[i]){
-      
-      chr1 = pindel$chr_1_pindel[i]
-      chr2 = pindel$chr_2_pindel[i]
-      start1 = pindel$start_1_pindel[i]
-      start2 = pindel$start_2_pindel[i]
-      
-      pindel$chr_1_pindel[i] = chr2
-      pindel$chr_2_pindel[i] = chr1
-      pindel$start_1_pindel[i] = start2
-      pindel$start_2_pindel[i] = start1
-    }
-    
-  }
-  
-  pindel = unique(pindel)
-  
-  pindel = pindel %>% arrange(chr_1_pindel,chr_2_pindel,
-                              start_1_pindel,start_2_pindel) %>% as.data.table()
-  
-  type = "translocation"
-  
-  pindel$ID = "none"
-  
-  pindel$ID[1] = paste0(type,"_",1)
-  
-  for(i in 2:nrow(pindel)){
-    
-    if(pindel$chr_1_pindel[i]==pindel$chr_1_pindel[i-1] & pindel$chr_2_pindel[i]==pindel$chr_2_pindel[i-1] & 
-       ((abs(pindel$start_1_pindel[i]-pindel$start_1_pindel[i-1])<=window_between_callers | 
-         abs(pindel$start_2_pindel[i]-pindel$start_2_pindel[i-1])<=window_between_callers))){
-      
-      pindel$ID[i] = paste0(pindel$ID[i-1])
-    }
-    else{pindel$ID[i] = paste0(type,"_",i)}
-    
-  }
-  
-  pindel_ok = data.frame(ID = unique(pindel$ID))
-  
-  pindel_ok$chr_1_pindel = 0
-  pindel_ok$start_1_pindel = 0
-  pindel_ok$end_1_pindel = 0
-  
-  pindel_ok$chr_2_pindel = 0
-  pindel_ok$start_2_pindel = 0
-  pindel_ok$end_2_pindel = 0
-  
-  pindel_ok$GT_pindel = "0/1"
-  pindel_ok$length_pindel = 0
-  
-  i=1
-  
-  for(i in 1:nrow(pindel_ok)){
-    
-    aux = pindel %>% filter(ID==pindel_ok$ID[i])
-    
-    pindel_ok$chr_1_pindel[i] = unique(aux$chr_1_pindel)
-    pindel_ok$start_1_pindel[i] = min(aux$start_1_pindel)
-    pindel_ok$end_1_pindel[i] = max(aux$start_1_pindel)
-    
-    pindel_ok$chr_2_pindel[i] = unique(aux$chr_2_pindel)
-    pindel_ok$start_2_pindel[i] = min(aux$start_2_pindel)
-    pindel_ok$end_2_pindel[i] = max(aux$start_2_pindel)
-    
-    pindel_ok$length_pindel[i] = max(c(pindel_ok$end_2_pindel[i]-pindel_ok$start_2_pindel[i],
-                                       pindel_ok$end_1_pindel[i]-pindel_ok$start_1_pindel[i]))
-    
-  }
-  
-  pindel_ok$lower_pindel_start_1 = pindel_ok$start_1_pindel-win_size[k]
-  pindel_ok$upper_pindel_start_1 = pindel_ok$start_1_pindel+win_size[k]
-  pindel_ok$lower_pindel_start_2 = pindel_ok$start_2_pindel-win_size[k]
-  pindel_ok$upper_pindel_start_2 = pindel_ok$start_2_pindel+win_size[k]
-  
-  pindel_ok$lower_pindel_end_1 = pindel_ok$end_1_pindel-win_size[k]
-  pindel_ok$upper_pindel_end_1 = pindel_ok$end_1_pindel+win_size[k]
-  pindel_ok$lower_pindel_end_2 = pindel_ok$end_2_pindel-win_size[k]
-  pindel_ok$upper_pindel_end_2 = pindel_ok$end_2_pindel+win_size[k]
-  
-  
-  pindel_ok = pindel_ok %>% as.data.table()
-  
-  
-  ## manta #####
-  
-  manta = fread("Translocaciones/Golden/insilico_data/manta_insilico3_modelo_translocaciones",fill = T)
-  colnames(manta) = c("chr_1_manta","start_1_manta","chr_2_manta","start_2_manta","GT_manta")
-  
-  manta$chr_1_manta[manta$chr_1_manta=="X"] = "23"
-  manta$chr_1_manta[manta$chr_1_manta=="Y"] = "24"
-  manta$chr_2_manta[manta$chr_2_manta=="X"] = "23"
-  manta$chr_2_manta[manta$chr_2_manta=="Y"] = "24"
-  
-  manta$chr_1_manta = as.numeric(manta$chr_1_manta)
-  manta$chr_2_manta = as.numeric(manta$chr_2_manta)
-  
-  for(i in 1:nrow(manta)){
-    
-    if(manta$chr_1_manta[i]>manta$chr_2_manta[i]){
-      
-      chr1 = manta$chr_1_manta[i]
-      chr2 = manta$chr_2_manta[i]
-      start1 = manta$start_1_manta[i]
-      start2 = manta$start_2_manta[i]
-      
-      manta$chr_1_manta[i] = chr2
-      manta$chr_2_manta[i] = chr1
-      manta$start_1_manta[i] = start2
-      manta$start_2_manta[i] = start1
-    }
-    
-  }
-  
-  manta = unique(manta)
-  
-  manta = manta %>% arrange(chr_1_manta,chr_2_manta,
-                            start_1_manta,start_2_manta) %>% as.data.table()
-  
-  type = "translocation"
-  
-  manta$ID = "none"
-  
-  manta$ID[1] = paste0(type,"_",1)
-  
-  for(i in 2:nrow(manta)){
-    
-    if(manta$chr_1_manta[i]==manta$chr_1_manta[i-1] & manta$chr_2_manta[i]==manta$chr_2_manta[i-1] & 
-       ((abs(manta$start_1_manta[i]-manta$start_1_manta[i-1])<=window_between_callers | 
-         abs(manta$start_2_manta[i]-manta$start_2_manta[i-1])<=window_between_callers)) &
-       manta$GT_manta[i]==manta$GT_manta[i-1]){
-      manta$ID[i] = paste0(manta$ID[i-1])
-    }
-    else{manta$ID[i] = paste0(type,"_",i)}
-    
-  }
-  
-  manta_ok = data.frame(ID = unique(manta$ID))
-  
-  manta_ok$chr_1_manta = 0
-  manta_ok$start_1_manta = 0
-  manta_ok$end_1_manta = 0
-  
-  manta_ok$chr_2_manta = 0
-  manta_ok$start_2_manta = 0
-  manta_ok$end_2_manta = 0
-  
-  manta_ok$GT_manta = 0
-  manta_ok$length_manta = 0
-  
-  i=1
-  
-  for(i in 1:nrow(manta_ok)){
-    
-    aux = manta %>% filter(ID==manta_ok$ID[i])
-    
-    manta_ok$chr_1_manta[i] = unique(aux$chr_1_manta)
-    manta_ok$start_1_manta[i] = min(aux$start_1_manta)
-    manta_ok$end_1_manta[i] = max(aux$start_1_manta)
-    
-    manta_ok$chr_2_manta[i] = unique(aux$chr_2_manta)
-    manta_ok$start_2_manta[i] = min(aux$start_2_manta)
-    manta_ok$end_2_manta[i] = max(aux$start_2_manta)
-    
-    manta_ok$GT_manta[i] = paste0(unique(aux$GT_manta),collapse = "")
-    manta_ok$length_manta[i] = max(c(manta_ok$end_2_manta[i]-manta_ok$start_2_manta[i],
-                                     manta_ok$end_1_manta[i]-manta_ok$start_1_manta[i]))
-    
-  }
-  
-  manta_ok$GT_manta[-which(manta_ok$GT_manta %in% c("0/1","1/1"))] = "./."
-  
-  manta_ok$lower_manta_start_1 = manta_ok$start_1_manta-win_size[k]
-  manta_ok$upper_manta_start_1 = manta_ok$start_1_manta+win_size[k]
-  manta_ok$lower_manta_start_2 = manta_ok$start_2_manta-win_size[k]
-  manta_ok$upper_manta_start_2 = manta_ok$start_2_manta+win_size[k]
-  
-  manta_ok$lower_manta_end_1 = manta_ok$end_1_manta-win_size[k]
-  manta_ok$upper_manta_end_1 = manta_ok$end_1_manta+win_size[k]
-  manta_ok$lower_manta_end_2 = manta_ok$end_2_manta-win_size[k]
-  manta_ok$upper_manta_end_2 = manta_ok$end_2_manta+win_size[k]
-  
-  manta_ok = manta_ok %>% as.data.table()
-  
-  
-  
-  ### svaba #####
-  
-  svaba = fread("Translocaciones/Golden/insilico_data/Svaba_doble_posicion")
-  colnames(svaba) = c("chr_1_svaba","start_1_svaba","chr_2_svaba","start_2_svaba","GT_svaba")
-  
-  svaba$chr_1_svaba[svaba$chr_1_svaba=="X"] = "23"
-  svaba$chr_1_svaba[svaba$chr_1_svaba=="Y"] = "24"
-  svaba$chr_2_svaba[svaba$chr_2_svaba=="X"] = "23"
-  svaba$chr_2_svaba[svaba$chr_2_svaba=="Y"] = "24"
-  
-  svaba$chr_1_svaba = as.numeric(svaba$chr_1_svaba)
-  svaba$chr_2_svaba = as.numeric(svaba$chr_2_svaba)
-  
-  remove_variants = NULL
-  
-  for(i in 1:nrow(svaba)){
-    
-    if(svaba$chr_1_svaba[i]>svaba$chr_2_svaba[i]){
-      
-      chr1 = svaba$chr_1_svaba[i]
-      chr2 = svaba$chr_2_svaba[i]
-      start1 = svaba$start_1_svaba[i]
-      start2 = svaba$start_2_svaba[i]
-      
-      svaba$chr_1_svaba[i] = chr2
-      svaba$chr_2_svaba[i] = chr1
-      svaba$start_1_svaba[i] = start2
-      svaba$start_2_svaba[i] = start1
-    }
-    if(svaba$chr_1_svaba[i]==svaba$chr_2_svaba[i]){
-      
-      remove_variants = c(remove_variants,i)
-      
-    }
-  }
-  
-  svaba = svaba[-remove_variants,]
-  svaba = unique(svaba)
-  
-  svaba = svaba %>% arrange(chr_1_svaba,chr_2_svaba,
-                            start_1_svaba,start_2_svaba) %>% as.data.table()
-  
-  type = "translocation"
-  
-  svaba$ID = "none"
-  
-  svaba$ID[1] = paste0(type,"_",1)
-  
-  for(i in 2:nrow(svaba)){
-    
-    if(svaba$chr_1_svaba[i]==svaba$chr_1_svaba[i-1] & svaba$chr_2_svaba[i]==svaba$chr_2_svaba[i-1] & 
-       ((abs(svaba$start_1_svaba[i]-svaba$start_1_svaba[i-1])<=window_between_callers | 
-         abs(svaba$start_2_svaba[i]-svaba$start_2_svaba[i-1])<=window_between_callers)) &
-       svaba$GT_svaba[i]==svaba$GT_svaba[i-1]){
-      svaba$ID[i] = paste0(svaba$ID[i-1])
-    }
-    else{svaba$ID[i] = paste0(type,"_",i)}
-    
-  }
-  
-  svaba_ok = data.frame(ID = unique(svaba$ID))
-  
-  svaba_ok$chr_1_svaba = 0
-  svaba_ok$start_1_svaba = 0
-  svaba_ok$end_1_svaba = 0
-  
-  svaba_ok$chr_2_svaba = 0
-  svaba_ok$start_2_svaba = 0
-  svaba_ok$end_2_svaba = 0
-  
-  svaba_ok$GT_svaba = 0
-  svaba_ok$length_svaba = 0
-  
-  i=1
-  
-  for(i in 1:nrow(svaba_ok)){
-    
-    aux = svaba %>% filter(ID==svaba_ok$ID[i])
-    
-    svaba_ok$chr_1_svaba[i] = unique(aux$chr_1_svaba)
-    svaba_ok$start_1_svaba[i] = min(aux$start_1_svaba)
-    svaba_ok$end_1_svaba[i] = max(aux$start_1_svaba)
-    
-    svaba_ok$chr_2_svaba[i] = unique(aux$chr_2_svaba)
-    svaba_ok$start_2_svaba[i] = min(aux$start_2_svaba)
-    svaba_ok$end_2_svaba[i] = max(aux$start_2_svaba)
-    
-    svaba_ok$GT_svaba[i] = paste0(unique(aux$GT_svaba),collapse = "")
-    
-    print(paste0(i," ",paste0(unique(aux$GT_svaba))),collapse = "")
-    
-    svaba_ok$length_svaba[i] = max(c(svaba_ok$end_2_svaba[i]-svaba_ok$start_2_svaba[i],
-                                     svaba_ok$end_1_svaba[i]-svaba_ok$start_1_svaba[i]))
-    
-  }
-  
-  svaba_ok$GT_svaba[-which(svaba_ok$GT_svaba %in% c("0/1","1/1"))] = "./."
-  
-  svaba_ok$lower_svaba_start_1 = svaba_ok$start_1_svaba-win_size[k]
-  svaba_ok$upper_svaba_start_1 = svaba_ok$start_1_svaba+win_size[k]
-  svaba_ok$lower_svaba_start_2 = svaba_ok$start_2_svaba-win_size[k]
-  svaba_ok$upper_svaba_start_2 = svaba_ok$start_2_svaba+win_size[k]
-  
-  svaba_ok$lower_svaba_end_1 = svaba_ok$end_1_svaba-win_size[k]
-  svaba_ok$upper_svaba_end_1 = svaba_ok$end_1_svaba+win_size[k]
-  svaba_ok$lower_svaba_end_2 = svaba_ok$end_2_svaba-win_size[k]
-  svaba_ok$upper_svaba_end_2 = svaba_ok$end_2_svaba+win_size[k]
-  
-  svaba_ok = svaba_ok %>% as.data.table()
-  
-  
-  
-  
-  # lumpy
-  
-  sens_lumpy = sensitivity_precision_geno_error_bp_trans_bis(lumpy_ok,golden,"translocation","lumpy")
-  
-  my_callers[(my_callers$callers=="lumpy" & my_callers$win_size==win_size[k]),]$sensitivity = sens_lumpy$sensitivity
-  my_callers[(my_callers$callers=="lumpy" & my_callers$win_size==win_size[k]),]$precision = sens_lumpy$precision
-  my_callers[(my_callers$callers=="lumpy" & my_callers$win_size==win_size[k]),]$f.score = sens_lumpy$f1_score
-  my_callers[(my_callers$callers=="lumpy" & my_callers$win_size==win_size[k]),]$g.error = sens_lumpy$g_error
-  
-  
-  # pindel
-  
-  sens_pindel = sensitivity_precision_geno_error_bp_trans_bis(pindel_ok,golden,"translocation","pindel")
-  
-  my_callers[(my_callers$callers=="pindel" & my_callers$win_size==win_size[k]),]$sensitivity = sens_pindel$sensitivity
-  my_callers[(my_callers$callers=="pindel" & my_callers$win_size==win_size[k]),]$precision = sens_pindel$precision
-  my_callers[(my_callers$callers=="pindel" & my_callers$win_size==win_size[k]),]$f.score = sens_pindel$f1_score
-  my_callers[(my_callers$callers=="pindel" & my_callers$win_size==win_size[k]),]$g.error = sens_pindel$g_error
-  
-  # manta
-  
-  sens_manta = sensitivity_precision_geno_error_bp_trans_bis(manta_ok,golden,"translocation","manta")
-  
-  my_callers[(my_callers$callers=="manta" & my_callers$win_size==win_size[k]),]$sensitivity = sens_manta$sensitivity
-  my_callers[(my_callers$callers=="manta" & my_callers$win_size==win_size[k]),]$precision = sens_manta$precision
-  my_callers[(my_callers$callers=="manta" & my_callers$win_size==win_size[k]),]$f.score = sens_manta$f1_score
-  my_callers[(my_callers$callers=="manta" & my_callers$win_size==win_size[k]),]$g.error = sens_manta$g_error
-  
-  # delly
-  
-  sens_delly = sensitivity_precision_geno_error_bp_trans_bis(delly_ok,golden,"translocation","delly")
-  
-  my_callers[(my_callers$callers=="delly" & my_callers$win_size==win_size[k]),]$sensitivity = sens_delly$sensitivity
-  my_callers[(my_callers$callers=="delly" & my_callers$win_size==win_size[k]),]$precision = sens_delly$precision
-  my_callers[(my_callers$callers=="delly" & my_callers$win_size==win_size[k]),]$f.score = sens_delly$f1_score
-  my_callers[(my_callers$callers=="delly" & my_callers$win_size==win_size[k]),]$g.error = sens_delly$g_error
-  
-  # svaba
-  
-  sens_svaba = sensitivity_precision_geno_error_bp_trans_bis(svaba_ok,golden,"translocation","svaba")
-  
-  my_callers[(my_callers$callers=="svaba" & my_callers$win_size==win_size[k]),]$sensitivity = sens_svaba$sensitivity
-  my_callers[(my_callers$callers=="svaba" & my_callers$win_size==win_size[k]),]$precision = sens_svaba$precision
-  my_callers[(my_callers$callers=="svaba" & my_callers$win_size==win_size[k]),]$f.score = sens_svaba$f1_score
-  my_callers[(my_callers$callers=="svaba" & my_callers$win_size==win_size[k]),]$g.error = sens_svaba$g_error
-  
-  
-}
-
-
-write.csv(my_callers,"Translocaciones/Golden/outputs/window_size_callers.csv",row.names = F)
-
-
-## plot results ####
-
-#my_callers = fread("Translocations/outputs/window_size_callers.csv")
-
-delly = my_callers %>% filter(callers=="delly") #300
-lumpy = my_callers %>% filter(callers=="lumpy") #200
-svaba = my_callers %>% filter(callers=="svaba") #300
-manta = my_callers %>% filter(callers=="manta") #200
-pindel = my_callers %>% filter(callers=="pindel") #10
-
 
 ## read vcf ######
 
@@ -791,7 +176,7 @@ window_between_callers = 150
 
 ### delly #####
 
-delly = fread("Translocaciones/Golden/insilico_data/delly_insilico3_modelo_translocaciones")
+delly = fread("data/Delly_TRA")
 colnames(delly) = c("chr_1_delly","start_1_delly","chr_2_delly","start_2_delly","GT_delly")
 
 delly$chr_1_delly[delly$chr_1_delly=="X"] = "23"
@@ -894,7 +279,7 @@ delly_ok = delly_ok %>% as.data.table()
 
 ### lumpy #####
 
-lumpy = fread("Translocaciones/Golden/insilico_data/lumpy_insilico3_modelo_translocaciones")
+lumpy = fread("data/Lumpy_TRA")
 colnames(lumpy) = c("chr_1_lumpy","start_1_lumpy","chr_2_lumpy","start_2_lumpy","GT_lumpy")
 
 lumpy = lumpy %>% filter(chr_1_lumpy!="hs37d5")
@@ -1003,7 +388,7 @@ lumpy_ok = lumpy_ok %>% as.data.table()
 
 ### pindel #####
 
-pindel = fread("Translocaciones/Golden/insilico_data/pindel_insilico3_modelo_translocaciones")
+pindel = fread("data/Pindel_TRA")
 colnames(pindel) = c("chr_1_pindel","start_1_pindel","chr_2_pindel","start_2_pindel")
 
 pindel$chr_1_pindel[pindel$chr_1_pindel=="X"] = "23"
@@ -1102,7 +487,7 @@ pindel_ok = pindel_ok %>% as.data.table()
 
 ## manta #####
 
-manta = fread("Translocaciones/Golden/insilico_data/manta_insilico3_modelo_translocaciones",fill = T)
+manta = fread("data/Manta_TRA",fill = T)
 colnames(manta) = c("chr_1_manta","start_1_manta","chr_2_manta","start_2_manta","GT_manta")
 
 manta$chr_1_manta[manta$chr_1_manta=="X"] = "23"
@@ -1204,7 +589,7 @@ manta_ok = manta_ok %>% as.data.table()
 
 ### svaba #####
 
-svaba = fread("Translocaciones/Golden/insilico_data/Svaba_doble_posicion")
+svaba = fread("data/SVaBA_TRA")
 colnames(svaba) = c("chr_1_svaba","start_1_svaba","chr_2_svaba","start_2_svaba","GT_svaba")
 
 svaba$chr_1_svaba[svaba$chr_1_svaba=="X"] = "23"
@@ -1394,19 +779,11 @@ metrics_callers = cbind(SV_type=c("Translocations",rep("",nrow(metrics_callers)-
 metrics_callers[,1:3] = apply(metrics_callers[,1:3], 2, function(x) as.character(x));
 metrics_callers[,4:9] = apply(metrics_callers[,4:9], 2, function(x) as.numeric(x));
 
-write.csv(metrics_callers,"Translocaciones/Golden/outputs/translocations_new.csv",row.names = F)
-
-metrics_callers = read.csv("Translocaciones/Golden/outputs/translocations_new.csv")
-metrics_callers$Caller = as.character(metrics_callers$Caller)
-
 
 
 ## prepare BBDD ####
 
-# (neteja de cada vcf: posem ID al primer caller que fem el merge (F-score més gran) 
-
 # manta
-
 
 full_merge = NULL
 
@@ -1494,9 +871,7 @@ table(full_merge$chr_1_golden)
 table(full_merge$chr_2_golden)
 
 
-#saveRDS(full_merge,"Translocaciones/Golden/outputs/data_merge.rds")
-
-my_data2 = readRDS("/home/jvall2/Mare_folder1/merge_all_calling_GCAT/Translocaciones/Golden/outputs/data_merge.rds")
+my_data2 = full_merge
 
 callers_ref = c("manta","lumpy","delly","pindel","svaba","golden")
 
@@ -1614,7 +989,7 @@ table(final_data$chr_2)
 ### add length #######
 
 summary(final_data$length)
-GT
+                              
 aux = as.character(cut(final_data$length,
                     breaks = c(30,150,500,1000,2000,3000,Inf),right = F))
 
@@ -1629,7 +1004,7 @@ final_data$length_stretch = aux
 
 final_data = final_data %>% as.data.table()
 
-strategies = fread("/home/jvall2/Mare_folder1/merge_all_calling_GCAT/Deleciones/strategies.csv")
+strategies = fread("ext/strategies.csv")
 
 final_data$strategy = strategy(final_data,
                              callers = c("lumpy","manta","pindel","delly","svaba"),
@@ -1658,7 +1033,7 @@ table(final_data$callers_detected,final_data$strategy)
 chisq.test(table(final_data$callers_detected,final_data$strategy))
 
 
-### GT escala ######
+### GT ######
 
 final_data$GT_final = NA
 
@@ -1705,7 +1080,7 @@ table(data_call$GT_final,useNA = "always")
 final_data$GT_final = as.character(data_call[,4])
 
 
-## prepare model choose de best model ####
+## prepare model choose the best model ####
 
 final_data = final_data %>% filter(length>30 | is.na(length))
 
@@ -1804,7 +1179,7 @@ final_data$prediction = my_pred
 
 ## genotype error in the model ######
 
-# classic error
+# 1) Geno error: most common genotype
 
 
 final_data$GT = NA
@@ -1856,7 +1231,7 @@ model_g_error = 100 -(sum(as.character(data_call$GT)==as.character(data_call$GT_
 model_g_error
 
 
-# escala manta-delly-lumpy
+# 2) order manta-delly-lumpy
 
 caller = c("lumpy","delly","manta")
 
@@ -1977,32 +1352,25 @@ f_score = round(((2*model_sens*model_spec)/(model_sens + model_spec))/100,3)
 final_data$prediction = my_pred
 
 
-#saveRDS(final_data,"/home/jvall2/Mare_folder1/merge_all_calling_GCAT/Translocaciones/Golden/outputs/data_merge_translocations.rds")
-
-
-metrics_callers = read.csv("Translocaciones/Golden/outputs/translocations_new.csv")
-metrics_callers$Caller = as.character(metrics_callers$Caller)
-
-
-# que lo detecte al menos 1 caller
+# detected by at least 1 caller
 
 det_call = final_data %>% filter(callers_detected %in% 1:9)
 
 callers1 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 2 caller y 2 estrategias a la vez
+# detected by at least 2 callers and 2 strategies
 
 det_call = final_data %>% filter(callers_detected2 %in% 2:9 & strategy %in% 2:6)
 
 callers2 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 3 caller
+# detected by at least 3 callers and 2 strategies
 
 det_call = final_data %>% filter(callers_detected2 %in% 3:9 & strategy %in% 2:6)
 
 callers3 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 4 caller
+# detected by at least 4 callers and 2 strategies
 
 det_call = final_data %>% filter(callers_detected2 %in% 4:9 & strategy %in% 2:6)
 
@@ -2025,14 +1393,8 @@ metrics_callers = rbind(metrics_callers,
 metrics_callers = rbind(metrics_callers,
                         c("","",">=4 caller **",callers4,""))
 
-#write.csv(metrics_callers,"Translocaciones/Golden/outputs/translocations_new.csv",row.names = F)
-
-
 
 ### CV ######
-
-metrics_callers = read.csv("Translocaciones/Golden/outputs/translocations_new.csv")
-metrics_callers$Caller = as.character(metrics_callers$Caller)
 
 library(caret)
 library(e1071)
@@ -2061,8 +1423,6 @@ mod_fit <- train(factor(PASS) ~ factor(GT_manta) + factor(GT_delly) + factor(GT_
                  data=final_data_70, method="glm", family="binomial",
                  trControl = ctrl)
 
-saveRDS(mod_fit,"Translocaciones/model_translocations.rds")
-
 my_pred = predict(mod_fit, newdata=final_data_70)
 
 my_pred = ifelse(my_pred=="YES",0,1)
@@ -2083,25 +1443,26 @@ spec_call_cv = round(tp_cv/(fp_cv+tp_cv)*100,3)
 
 f_score_cv = round((2*sens_call_cv*spec_call_cv)/(sens_call_cv+spec_call_cv)/100,3)
 
-# que lo detecte al menos 1 caller
+                              
+# detected by at least 1 callers and 2 strategies
 
 det_call = final_data_70 %>% filter(callers_detected2 %in% 1:9)
 
 callers1 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 2 caller y 2 estrategias a la vez
+# detected by at least 2 callers and 2 strategies
 
 det_call = final_data_70 %>% filter(callers_detected2 %in% 2:9 & strategy %in% 2:6)
 
 callers2 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 3 caller
+# detected by at least 3 callers and 2 strategies
 
 det_call = final_data_70 %>% filter(callers_detected2 %in% 3:9 & strategy %in% 2:6)
 
 callers3 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 4 caller
+# detected by at least 4 callers and 2 strategies
 
 det_call = final_data_70 %>% filter(callers_detected2 %in% 4:9 & strategy %in% 2:6)
 
@@ -2148,25 +1509,25 @@ spec_call_cv = round(tp_cv/(fp_cv+tp_cv)*100,3)
 f_score_cv = round((2*sens_call_cv*spec_call_cv)/(sens_call_cv+spec_call_cv)/100,3)
 
 
-# que lo detecte al menos 1 caller
+# detected by at least 1 caller
 
 det_call = final_data_30 %>% filter(callers_detected2 %in% 1:9)
 
 callers1 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 2 caller y 2 estrategias a la vez
+# detected by at least 2 callers and 2 strategies
 
 det_call = final_data_30 %>% filter(callers_detected2 %in% 2:9 & strategy %in% 2:6)
 
 callers2 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 3 caller
+# detected by at least 3 callers and 2 strategies
 
 det_call = final_data_30 %>% filter(callers_detected2 %in% 3:9 & strategy %in% 2:6)
 
 callers3 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 4 caller
+# detected by at least 4 callers and 2 strategies
 
 det_call = final_data_30 %>% filter(callers_detected2 %in% 4:9 & strategy %in% 2:6)
 
@@ -2189,13 +1550,8 @@ metrics_callers = rbind(metrics_callers,
 metrics_callers = rbind(metrics_callers,
                         c("","",">=4 caller **",callers4,""))
 
-write.csv(metrics_callers,"Translocaciones/Golden/outputs/translocations_new.csv",row.names = F)
-
-#metrics_callers = read.csv("Translocaciones/Golden/outputs/translocations_new.csv")
 
 metrics_callers$F1.Score = ((2*metrics_callers$Sensitivity*metrics_callers$Precision)/
                               (metrics_callers$Sensitivity + metrics_callers$Precision))
 
-head(metrics_callers)
-library(xtable)
-print(xtable(metrics_callers[,-1],digits = 2),include.rownames = F)
+
