@@ -378,7 +378,7 @@ table(final_data$callers_detected_ok)
 
 final_data = final_data %>% as.data.table()
 
-strategies = fread("Deleciones/strategies.csv")
+strategies = fread("ext/strategies.csv")
 
 final_data$strategy = 0
 
