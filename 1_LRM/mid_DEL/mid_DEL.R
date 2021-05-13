@@ -1,13 +1,13 @@
 library(data.table)
 library(dplyr)
 
-setwd("C:/Users/ivangalvan/Desktop/SV_gcat_panel_github/")
+source("ext/functions.R")
 
-source("ext/functions_JV_IGF_IC.R")
+setwd("1_LRM/mid_DEL/")
 
 # read golden ######
 
-golden_del = fread("mid_DEL/data/Insilico_mid_DEL")
+golden_del = fread("data/Insilico_mid_DEL")
 
 golden_del = golden_del %>% filter(V3>30 & V3<151)
 
@@ -55,7 +55,7 @@ golden$chr_pos_golden = do.call(paste0,list(golden$chr,"_",golden$start_golden))
 
 # read vcfs files ########
 
-delly = fread("mid_DEL/data/Delly_mid_DEL")
+delly = fread("data/Delly_mid_DEL")
 delly$V4 = as.numeric(abs(delly$V4))
 delly = delly %>% filter(V4>30 & V4<151)
 colnames(delly) = c("chr","start_delly","end","length_delly","GT_delly")
@@ -64,7 +64,7 @@ delly$upper_delly = delly$start_delly+10
 delly$chr_pos_delly = do.call(paste0,list(delly$chr,"_",delly$start_delly))
 
 
-lumpy = fread("mid_DEL/data/Lumpy_mid_DEL")
+lumpy = fread("data/Lumpy_mid_DEL")
 lumpy$V4 = as.numeric(abs(lumpy$V4))
 lumpy = lumpy %>% filter(V4>30 & V4<151)
 colnames(lumpy) = c("chr","start_lumpy","end","length_lumpy","GT_lumpy")
@@ -73,14 +73,14 @@ lumpy$upper_lumpy = lumpy$start_lumpy+10
 lumpy$chr_pos_lumpy = do.call(paste0,list(lumpy$chr,"_",lumpy$start_lumpy))
 
 
-pindel = fread("mid_DEL/data/Pindel_mid_DEL")
+pindel = fread("data/Pindel_mid_DEL")
 colnames(pindel) = c("chr","start_pindel","end","length_pindel","GT_pindel")
 pindel = pindel %>% filter(length_pindel>30 & length_pindel<151)
 pindel$lower_pindel = pindel$start_pindel-10
 pindel$upper_pindel = pindel$start_pindel+10
 pindel$chr_pos_pindel = do.call(paste0,list(pindel$chr,"_",pindel$start_pindel))
 
-whamg = fread("mid_DEL/data/Whamg_mid_DEL",fill = T)
+whamg = fread("data/Whamg_mid_DEL",fill = T)
 whamg$V4 = as.numeric(abs(whamg$V4))
 whamg = whamg %>% filter(V4>30 & V4<151)
 colnames(whamg) = c("chr","start_whamg","end","length_whamg","GT_whamg")
@@ -88,7 +88,7 @@ whamg$lower_whamg = whamg$start_whamg-10
 whamg$upper_whamg = whamg$start_whamg+10
 whamg$chr_pos_whamg = do.call(paste0,list(whamg$chr,"_",whamg$start_whamg))
 
-svaba = fread("mid_DEL/data/Svaba_mid_DEL")
+svaba = fread("data/Svaba_mid_DEL")
 svaba$length_svaba = abs(nchar(svaba$V3)-nchar(svaba$V4))
 svaba = svaba %>% filter(length_svaba>30 & length_svaba<151)
 colnames(svaba)[c(1,2,5)] = c("chr","start_svaba","GT_svaba")
@@ -97,7 +97,7 @@ svaba$lower_svaba = svaba$start_svaba-10
 svaba$upper_svaba = svaba$start_svaba+10
 svaba$chr_pos_svaba = do.call(paste0,list(svaba$chr,"_",svaba$start_svaba))
 
-gatk = fread("mid_DEL/data/Gatk_mid_DEL")
+gatk = fread("data/Gatk_mid_DEL")
 gatk$length_gatk = abs(nchar(gatk$V3)-nchar(gatk$V4))
 gatk = gatk %>% filter(length_gatk>30 & length_gatk<151)
 colnames(gatk)[c(1,2,5)] = c("chr","start_gatk","GT_gatk")
@@ -107,7 +107,7 @@ gatk$lower_gatk = gatk$start_gatk-10
 gatk$upper_gatk = gatk$start_gatk+10
 gatk$chr_pos_gatk = do.call(paste0,list(gatk$chr,"_",gatk$start_gatk))
 
-deepvariant = fread("mid_DEL/data/Deepvariant_mid_DEL")
+deepvariant = fread("data/Deepvariant_mid_DEL")
 deepvariant$length_deepvariant = abs(nchar(deepvariant$V3)-nchar(deepvariant$V4))
 deepvariant = deepvariant %>% filter(length_deepvariant>30 & length_deepvariant<151)
 colnames(deepvariant)[c(1,2,5)] = c("chr","start_deepvariant","GT_deepvariant")
@@ -117,7 +117,7 @@ deepvariant$lower_deepvariant = deepvariant$start_deepvariant-10
 deepvariant$upper_deepvariant = deepvariant$start_deepvariant+10
 deepvariant$chr_pos_deepvariant = do.call(paste0,list(deepvariant$chr,"_",deepvariant$start_deepvariant))
 
-strelka = fread("mid_DEL/data/Strelka_mid_DEL")
+strelka = fread("data/Strelka_mid_DEL")
 strelka$length_strelka = abs(nchar(strelka$V3)-nchar(strelka$V4))
 strelka = strelka %>% filter(length_strelka>30 & length_strelka<151)
 colnames(strelka)[c(1,2,5)] = c("chr","start_strelka","GT_strelka")
@@ -127,7 +127,7 @@ strelka$lower_strelka = strelka$start_strelka-10
 strelka$upper_strelka = strelka$start_strelka+10
 strelka$chr_pos_strelka = do.call(paste0,list(strelka$chr,"_",strelka$start_strelka))
 
-manta = fread("mid_DEL/data/Manta_mid_DEL_50_150",fill = T)
+manta = fread("data/Manta_mid_DEL_50_150",fill = T)
 manta$V4 = as.numeric(abs(manta$V4))
 manta = manta %>% filter(V4>30 & V4<151)
 colnames(manta) = c("chr","start_manta","end","length_manta","GT_manta")
@@ -136,7 +136,7 @@ manta$upper_manta = manta$start_manta+10
 manta$chr_pos_manta = do.call(paste0,list(manta$chr,"_",manta$start_manta))
 
 # we add "0/1" gewnotype because Manta for deletions from 30 to 50 doesn't give genotype
-manta2 = fread("mid_DEL/data/Manta_mid_DEL_30_49",fill = T)
+manta2 = fread("data/Manta_mid_DEL_30_49",fill = T)
 manta2$V4 = as.numeric(abs(manta2$V4))
 manta2 = manta2 %>% filter(V4>30 & V4<151)
 manta2$GT_manta = "0/1"
@@ -235,7 +235,7 @@ c[,1:3] = apply(c[,1:3], 2, function(x) as.character(x));
 
 metrics_callers = c
 
-write.csv(metrics_callers,"mid_DEL/outputs/metrics_mid_DEL.csv",row.names = F)
+write.csv(metrics_callers,"outputs/metrics_mid_DEL.csv",row.names = F)
 
 
 
@@ -285,7 +285,7 @@ my_data2 = merge_callers_deletions_duplications(golden,my_data,callers_ref = c("
                                                                                "whamg","gatk","pindel","deepvariant","strelka"),
                                                 caller_to_merge = c("golden"),svtype="deletion",repro = 0.8)
 
-saveRDS(my_data2,"mid_DEL/outputs/merge_callers_mid_DEL.rds")
+saveRDS(my_data2,"outputs/merge_callers_mid_DEL.rds")
 
 
 ### consensus length #######
@@ -457,7 +457,7 @@ f_score = ((2*model_sens*model_spec)/(model_sens + model_spec))/100
 
 my_data2$prediction = my_pred
 
-saveRDS(my_data2,"mid_DEL/outputs/merge_callers_mid_DEL_prediction.rds")
+saveRDS(my_data2,"outputs/merge_callers_mid_DEL_prediction.rds")
 
 
 ### genotype error in the model ######
@@ -612,7 +612,7 @@ colnames(line_call4) <- c("SV_type","N","Caller","TP","FP","Recall","CI Recall",
 
 metrics_callers = rbind(metrics_callers,line_call4)
 
-write.csv(metrics_callers,"mid_DEL/outputs/metrics_mid_DEL.csv",row.names = F)
+write.csv(metrics_callers,"outputs/metrics_mid_DEL.csv",row.names = F)
 
 
 ### CV ########
