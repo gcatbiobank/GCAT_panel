@@ -1,0 +1,409 @@
+library(data.table)
+library(dplyr)
+library(caret)
+library(e1071)
+
+args <- commandArgs(trailingOnly = TRUE)
+i= as.numeric(args[2])
+source("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/functions.R")
+
+strategies = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/strategies.csv")
+
+mod_fit = readRDS("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/model_buena_pinta.rds")
+
+ids = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/all_samplesok",header = F)
+
+ids = ids$V1
+
+#i <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
+#i=39
+print(ids[i])
+
+dir.create(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/merge_callers_new/",ids[i]))
+
+
+# read vcfs Dani files ########
+
+delly = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Delly/",ids[i],"_DELLY_Del"))
+delly$V4 = as.numeric(abs(delly$V4))
+colnames(delly) = c("chr","start_delly","end","length_delly","GT_delly")
+delly$lower_delly = delly$start_delly-100
+delly$upper_delly = delly$start_delly+100
+delly$chr_pos_delly = do.call(paste0,list(delly$chr,"_",delly$start_delly))
+delly = delly %>% filter(length_delly>149)
+delly$chr[delly$chr=="X"] = 23
+delly$chr[delly$chr=="Y"] = 24
+delly$chr = as.character(delly$chr)
+
+lumpy = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Lumpy/",ids[i],"_Del_Lumpy"))
+lumpy$V4 = as.numeric(abs(lumpy$V4))
+colnames(lumpy) = c("chr","start_lumpy","end","length_lumpy","GT_lumpy")
+lumpy$lower_lumpy = lumpy$start_lumpy-100
+lumpy$upper_lumpy = lumpy$start_lumpy+100
+lumpy$chr_pos_lumpy = do.call(paste0,list(lumpy$chr,"_",lumpy$start_lumpy))
+lumpy = lumpy %>% filter(length_lumpy>149)
+lumpy$chr[lumpy$chr=="X"] = 23
+lumpy$chr[lumpy$chr=="Y"] = 24
+lumpy$chr = as.character(lumpy$chr)
+
+pindel = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Pindel/",ids[i],"_PINDEL_Del"))
+colnames(pindel) = c("chr","start_pindel","end","length_pindel","GT_pindel")
+pindel$lower_pindel = pindel$start_pindel-10
+pindel$upper_pindel = pindel$start_pindel+10
+pindel$chr_pos_pindel = do.call(paste0,list(pindel$chr,"_",pindel$start_pindel))
+pindel = pindel %>% filter(length_pindel>149)
+pindel$chr[pindel$chr=="X"] = 23
+pindel$chr[pindel$chr=="Y"] = 24
+pindel$chr = as.character(pindel$chr)
+
+whamg = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Whamg/",ids[i],"_WHAM_del"))
+whamg$V4 = as.numeric(abs(whamg$V4))
+colnames(whamg) = c("chr","start_whamg","end","length_whamg","GT_whamg")
+whamg$lower_whamg = whamg$start_whamg-10
+whamg$upper_whamg = whamg$start_whamg+10
+whamg$chr_pos_whamg = do.call(paste0,list(whamg$chr,"_",whamg$start_whamg))
+whamg = whamg %>% filter(length_whamg>149)
+whamg$chr[whamg$chr=="X"] = 23
+whamg$chr[whamg$chr=="Y"] = 24
+whamg$chr = as.character(whamg$chr)
+
+svaba = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/SVABA/",ids[i],"_SVABA"))
+colnames(svaba) = c("chr","start_svaba","chr2","pos2","GT_svaba")
+
+# remove translocations and change positions
+
+remove_variants = NULL
+
+for(variant in 1:nrow(svaba)){
+  
+  if(svaba$chr[variant]==svaba$chr2[variant] & svaba$start_svaba[variant]>svaba$pos2[variant]){
+    
+    start = svaba$start_svaba[variant]
+    end = svaba$pos2[variant]
+    
+    svaba$start_svaba[variant] = end
+    svaba$pos2[variant] = start
+  }
+  if(svaba$chr[variant]!=svaba$chr2[variant]){
+    
+    remove_variants = c(remove_variants,variant)
+    
+  }
+}
+
+svaba = svaba[-remove_variants,]
+
+svaba$lower_svaba = svaba$start_svaba-100
+svaba$upper_svaba = svaba$start_svaba+100
+svaba$chr_pos_svaba = do.call(paste0,list(svaba$chr,"_",svaba$start_svaba))
+svaba$pos2 = as.numeric(svaba$pos2)
+svaba$length_svaba = svaba$pos2-svaba$start_svaba
+svaba = svaba %>% filter(length_svaba>149)
+svaba$chr[svaba$chr=="X"] = 23
+svaba$chr[svaba$chr=="Y"] = 24
+svaba$chr = as.character(svaba$chr)
+
+manta = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Manta/",ids[i],"_manta_del"))
+manta$V4 = as.numeric(abs(manta$V4))
+colnames(manta) = c("chr","start_manta","end","length_manta","GT_manta")
+manta$lower_manta = manta$start_manta-50
+manta$upper_manta = manta$start_manta+50
+manta$chr_pos_manta = do.call(paste0,list(manta$chr,"_",manta$start_manta))
+manta = manta %>% filter(length_manta>149)
+manta$chr[manta$chr=="X"] = 23
+manta$chr[manta$chr=="Y"] = 24
+manta$chr = as.character(manta$chr)
+
+cnvnator = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/CNVnator/",ids[i],"_CNVator_Del"))
+cnvnator$V4 = as.numeric(abs(cnvnator$V4))
+colnames(cnvnator) = c("chr","start_cnvnator","end","length_cnvnator","GT_cnvnator")
+cnvnator$lower_cnvnator = cnvnator$start_cnvnator-300
+cnvnator$upper_cnvnator = cnvnator$start_cnvnator+300
+cnvnator$chr_pos_cnvnator = do.call(paste0,list(cnvnator$chr,"_",cnvnator$start_cnvnator))
+cnvnator = cnvnator %>% filter(length_cnvnator>149)
+cnvnator$chr[cnvnator$chr=="X"] = 23 
+cnvnator$chr[cnvnator$chr=="Y"] = 24
+cnvnator$chr = as.character(cnvnator$chr)
+
+call_windows = data.frame(caller = c("lumpy","delly","pindel","whamg",
+                                     "manta","cnvnator","svaba"),
+                          window = c(100,100,10,10,50,300,100))
+
+call_windows$caller = as.character(call_windows$caller)
+
+
+
+#for(j in 1:24){ 
+
+  j= as.numeric(args[1])
+  
+  # filter by chromosome ########
+  
+  delly_chr = delly %>% filter(chr==j) %>% arrange(start_delly) %>% as.data.table() %>% unique()
+  lumpy_chr = lumpy %>% filter(chr==j) %>% arrange(start_lumpy) %>% as.data.table() %>% unique()
+  pindel_chr = pindel %>% filter(chr==j) %>% arrange(start_pindel) %>% as.data.table() %>% unique()
+  whamg_chr = whamg %>% filter(chr==j) %>% arrange(start_whamg) %>% as.data.table() %>% unique()
+  svaba_chr = svaba %>% filter(chr==j) %>% arrange(start_svaba) %>% as.data.table() %>% unique()
+  manta_chr = manta %>% filter(chr==j) %>% arrange(start_manta) %>% as.data.table() %>% unique()
+  cnvnator_chr = cnvnator %>% filter(chr==j) %>% arrange(start_cnvnator) %>% as.data.table() %>% unique()
+  
+  n_rows = nrow(delly_chr) + nrow(lumpy_chr) + nrow(pindel_chr) + nrow(whamg_chr) + nrow(svaba_chr) + nrow(manta_chr) + nrow(cnvnator_chr)
+  
+  if(n_rows!=0){
+  
+  ## prepare BBDD ordered by F-score ####
+  
+  f_score_order = c("lumpy","delly","pindel","whamg",
+                    "manta","cnvnator","svaba")
+  
+  lumpy_chr$ID = paste0("deletion_",1:nrow(lumpy_chr)) # el merge empieza por lumpy y asignamos IDs
+  delly_chr$ID = "none"
+  pindel_chr$ID = "none"
+  whamg_chr$ID = "none"
+  manta_chr$ID = "none"
+  cnvnator_chr$ID = "none"
+  svaba_chr$ID = "none"
+  
+  caller_first = 1
+  
+  while(nrow(get(paste0(f_score_order[caller_first],"_chr")))==0){
+    
+    caller_first = caller_first + 1
+  }
+  
+  caller_second = caller_first + 1
+  
+  while(nrow(get(paste0(f_score_order[caller_second],"_chr")))==0){
+    
+    caller_second = caller_second + 1
+  }
+  
+  
+  first_call = f_score_order[caller_first]
+  second_call = f_score_order[caller_second]
+  
+  my_data = merge_callers_deletions_duplications(get(paste0(second_call,"_chr")),get(paste0(first_call,"_chr")),callers_ref = first_call,
+                          caller_to_merge = second_call,repro=0.8,svtype="deletion") 
+  
+  for(caller_merge in (caller_second+1):length(f_score_order)){
+    
+    n_row_call = nrow(get(paste0(f_score_order[caller_merge],"_chr")))
+    
+    while(n_row_call!=0){
+
+      callers_ref = tstrsplit(colnames(my_data)[grep("GT_",colnames(my_data))],split="GT_")[[2]]
+      
+      my_data = merge_callers_deletions_duplications(get(paste0(f_score_order[caller_merge],"_chr")),my_data,callers_ref = callers_ref,
+                                            caller_to_merge = f_score_order[caller_merge],repro=0.8,svtype="deletion") 
+      
+      n_row_call = 0
+            
+    }
+    
+  }
+  
+  
+  callers_all = tstrsplit(colnames(my_data)[grep("GT_",colnames(my_data))],split="GT_")[[2]]
+  
+  
+  ## consensus genotype #####
+  
+  my_data$GT = consensus_genotype(my_data,
+                                  callers = callers_all)
+  ## geno callers detected ####
+  
+  my_data$geno_callers = geno_callers(my_data,
+                                      callers = callers_all)
+  
+  
+  # change GT
+  
+  my_data$GT_manta[my_data$GT_manta=="0/1"] = "0/1-1/1"
+  my_data$GT_manta[my_data$GT_manta=="1/1"] = "0/1-1/1"
+  
+  my_data$GT_cnvnator[my_data$GT_cnvnator=="0/1"] = "0/1-1/1"
+  my_data$GT_cnvnator[my_data$GT_cnvnator=="1/1"] = "0/1-1/1"
+  
+  my_data$GT_delly[my_data$GT_delly=="0/1"] = "0/1-1/1"
+  my_data$GT_delly[my_data$GT_delly=="1/1"] = "0/1-1/1"
+  
+  my_data$GT_lumpy[my_data$GT_lumpy=="0/1"] = "0/1-1/1"
+  my_data$GT_lumpy[my_data$GT_lumpy=="1/1"] = "0/1-1/1"
+  
+  my_data$GT_pindel[my_data$GT_pindel=="0/1"] = "0/1-1/1"
+  my_data$GT_pindel[my_data$GT_pindel=="1/1"] = "0/1-1/1"
+  
+  my_data$GT_svaba[my_data$GT_svaba=="0/1"] = "0/1-1/1"
+  my_data$GT_svaba[my_data$GT_svaba=="1/1"] = "0/1-1/1"
+  
+  my_data$GT_whamg[my_data$GT_whamg=="0/1"] = "0/1-1/1"
+  my_data$GT_whamg[my_data$GT_whamg=="1/1"] = "0/1-1/1"
+  
+  
+  ## add number of callers detected #####
+  
+  my_data$callers_detected = n_callers_detected(my_data,
+                                                callers = callers_all)
+  
+  
+  ### consensus length #######
+  
+  my_data$length = consensus_length(my_data,
+                                    callers = callers_all)
+  
+  
+  my_data$length[is.na(my_data$length)] = my_data$length_cnvnator[is.na(my_data$length)]
+  
+  aux = cut(my_data$length,
+            breaks = c(150,500,1000,2000,3000,10000,Inf),right = F)
+  
+  my_data$length_stretch = aux
+  
+  
+  ### consensus start #######
+  
+  my_data$start = consensus_start(my_data,
+                                  callers = callers_all)
+  
+  
+  ## add reciprocity ###
+  
+  my_data$reciprocity = reprocicity(my_data,
+                                    callers = callers_all)
+  
+  
+  ## add strategy ####
+  
+  my_data$strategy_ok = strategy(my_data,
+                                 callers = callers_all,
+                                 strategies)
+  
+  my_data$strategy = my_data$strategy_ok
+  
+  my_data$strategy[my_data$strategy=="4"] = "4-5"
+  my_data$strategy[my_data$strategy=="5"] = "4-5"
+ 
+  
+  ## predict using LR model #####
+  
+  my_data$GT_manta[is.na(my_data$GT_manta)] = "9/9"
+  my_data$GT_whamg[is.na(my_data$GT_whamg)] = "9/9"
+  my_data$GT_delly[is.na(my_data$GT_delly)] = "9/9"
+  my_data$GT_lumpy[is.na(my_data$GT_lumpy)] = "9/9"
+  my_data$GT_pindel[is.na(my_data$GT_pindel)] = "9/9"
+  my_data$GT_svaba[is.na(my_data$GT_svaba)] = "9/9"
+  my_data$GT_cnvnator[is.na(my_data$GT_cnvnator)] = "9/9"
+  
+  
+  data_predict = my_data %>% select(ID,chr,start,GT_manta,GT_whamg,
+                                    GT_delly,GT_lumpy,GT_pindel,
+                                    GT_cnvnator,GT_svaba,length,
+                                    length_stretch,strategy,strategy_ok,
+                                    reciprocity,callers_detected,GT,geno_callers) %>%
+    as.data.frame(row.names=FALSE)
+  
+  data_predict$GT_manta = as.factor(data_predict$GT_manta)
+  data_predict$GT_whamg = as.factor(data_predict$GT_whamg)
+  data_predict$GT_delly = as.factor(data_predict$GT_delly)
+  data_predict$GT_lumpy = as.factor(data_predict$GT_lumpy)
+  data_predict$GT_pindel = as.factor(data_predict$GT_pindel)
+  data_predict$GT_cnvnator = as.factor(data_predict$GT_cnvnator)
+  data_predict$GT_svaba = as.factor(data_predict$GT_svaba)
+  data_predict$length_stretch = as.factor(data_predict$length_stretch)
+  data_predict$strategy = as.factor(data_predict$strategy)
+  
+  # predict YES/NO threshold 0.5
+  
+  my_pred = caret::predict.train(mod_fit,as.data.frame(data_predict)) #paquete caret requiere de "predict.train"
+  
+  my_pred = ifelse(my_pred=="YES",0,1)
+  
+  my_pred = ifelse(my_pred==0,"PASS","NO_PASS")
+  
+  data_predict$PASS = my_pred
+  
+  # predict probability (valores entre 0 y 1)
+  
+  my_pred = predict.train(mod_fit,as.data.frame(data_predict),type = "prob")
+  
+  data_predict$PASS_num = my_pred[,2]
+  
+  data_predict = as.data.table(data_predict)
+  
+  ## name callers detected ####
+  
+  data_predict$name_callers = name_callers_detected(data_predict,
+                                                    callers = callers_all)
+  
+  ## minimum window size ####
+  
+  data_predict$min_window_size = min_window_size(data_predict,
+                                                 callers = callers_all,
+                                                 call_windows)
+  
+  ## window size for merging between samples ####
+  
+  data_predict$lower = data_predict$start-data_predict$min_window_size
+  data_predict$upper = data_predict$start+data_predict$min_window_size
+  
+  ## group by ID to remove duplicates ####
+  
+  final_data = data_predict %>% select(ID,chr,start,GT,length,
+                                       strategy_ok,reciprocity,
+                                       callers_detected,name_callers,
+                                       min_window_size,lower,upper,PASS,PASS_num,geno_callers) %>%
+    arrange(start)
+  
+  final_data = final_data %>% group_by(ID) %>% 
+    summarise(chr = unique(chr),
+              start = median(start),
+              GT = paste(unique(na.omit(GT)), collapse = ','),
+              length = median(length),
+              strategy = paste(unique(na.omit(strategy_ok)), collapse = ','),
+              reciprocity = median(reciprocity),
+              callers_detected = median(callers_detected),
+              name_callers = paste(unique(na.omit(name_callers)), collapse = ','),
+              GT_callers = paste(unique(na.omit(geno_callers)), collapse = ','),
+              min_window_size = median(min_window_size),
+              lower = median(lower),
+              upper = median(upper),
+              PASS = paste(unique(na.omit(PASS)), collapse = ','),
+              PASS_num = median(PASS_num)) %>%
+    select(-ID)
+  
+  final_data = final_data %>% arrange(start)
+  
+  final_data$GT[!final_data$GT %in% c("0/1","1/1")] = "./."
+  final_data = final_data %>% filter(PASS %in% c("PASS","NO_PASS"))
+  missing_geno = which(final_data$GT=="./.")
+  final_data$GT_best = NA
+  
+  if(length(missing_geno)>0){
+  for(k in missing_geno){
+    
+    ranking_missing = c("manta","delly","lumpy","whamg","pindel","cnvnator","svaba")
+    callers = unlist(tstrsplit(final_data$name_callers[k],","))
+  
+    d=1
+    while(!ranking_missing[d] %in% callers){
+      d = d + 1
+    }
+  
+    final_data$GT_best[k] = unlist(tstrsplit(final_data$GT_callers[k],","))[which(callers %in% ranking_missing[d])]
+  }
+  }
+  #final_data$PL = "0,255,255"
+  #final_data$PL[final_data$GT=="0/1"] = "255,0,255"
+  #final_data$PL[final_data$GT=="1/1"] = "255,255,0"
+  #final_data$PL[final_data$GT=="./."] = "0"
+  
+  colnames(final_data) = paste0(colnames(final_data),"_",ids[i])
+  
+  fwrite(final_data,
+         paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/merge_callers_new/",ids[i],"/",ids[i],"_Del_chr_",j),
+         sep = " ",row.names = F,quote = F)
+  
+  
+  }  
+#}
+
