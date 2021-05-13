@@ -6,13 +6,13 @@
               args <- commandArgs(trailingOnly = TRUE)
               i= as.numeric(args[2])
               
-              source("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/functions.R")
+              source("ext/functions.R")
               
-              strategies = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/strategies.csv")
+              strategies = fread("ext/strategies.csv")
               
-              mod_fit = readRDS("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/best_model_mid_indels.rds")
+              mod_fit = readRDS("1_LRM/LRM_model_mid_DEL.rds")
               
-              ids = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/all_samplesok",header = F)
+              ids = fread("ext/all_samplesok",header = F)
               
               ids = ids$V1
               
@@ -161,9 +161,8 @@
               
               call_windows$caller = as.character(call_windows$caller)
               
-#              j=22
               
-#              for(j in 1:24){ 
+              for(j in 1:22){ 
                 
                 # filter by chromosome ########
                 
@@ -304,10 +303,7 @@
                 
                 my_data$length = consensus_length(my_data,
                                                   callers = callers_all)
-                
-                
-              #  my_data$length[is.na(my_data$length)] = my_data$length_cnvnator[is.na(my_data$length)]
-                
+                                             
                 aux = cut(my_data$length,
                           breaks = c(30,50,75,100,125,151),right = F)
                 
@@ -469,11 +465,10 @@
                 fwrite(final_data,
                        paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/merge_callers_new/",ids[i],"/",ids[i],"_Del_chr_",j),
                        sep = " ",row.names = F,quote = F)
-                
-                
+                            
                 
                 }  
-              #}
+              }
               
               
               
