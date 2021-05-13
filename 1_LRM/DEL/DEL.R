@@ -3,13 +3,13 @@
 library(data.table)
 library(dplyr)
 
-setwd("/home/igalvan/Mare_folder/Deleciones/")
+source("ext/functions.R")
 
-source("functions.R")
+setwd("1_LRM/DEL/")
 
 # read golden ######
 
-golden_del = fread("Golden/insilico_data/Insilico3_deleciones_150_tobig")
+golden_del = fread("data/Insilico_DEL")
 
 golden_del$V1 = gsub("chr","",golden_del$V1)
 
@@ -45,7 +45,7 @@ nrow(golden)
 
 # read vcfs files ########
 
-delly = fread("Golden/insilico_data/Delly2_deleciones_150_tobig")
+delly = fread("data/Delly_DEL")
 delly$V4 = as.numeric(abs(delly$V4))
 colnames(delly) = c("chr","start_delly","end","length_delly","GT_delly")
 delly$lower_delly = delly$start_delly-100
@@ -54,7 +54,7 @@ delly$chr_pos_delly = do.call(paste0,list(delly$chr,"_",delly$start_delly))
 delly = delly %>% arrange(chr,start_delly) %>% as.data.table()
 
 
-lumpy = fread("Golden/insilico_data/Lumpy_deleciones_150_tobig")
+lumpy = fread("data/Lumpy_DEL")
 lumpy$V4 = as.numeric(abs(lumpy$V4))
 colnames(lumpy) = c("chr","start_lumpy","end","length_lumpy","GT_lumpy")
 lumpy$lower_lumpy = lumpy$start_lumpy-100
@@ -63,14 +63,14 @@ lumpy$chr_pos_lumpy = do.call(paste0,list(lumpy$chr,"_",lumpy$start_lumpy))
 lumpy = lumpy %>% arrange(chr,start_lumpy) %>% as.data.table()
 
 
-pindel = fread("Golden/insilico_data/Pindel_deleciones_150_tobig")
+pindel = fread("data/Pindel_DEL")
 colnames(pindel) = c("chr","start_pindel","end","length_pindel","GT_pindel")
 pindel$lower_pindel = pindel$start_pindel-10
 pindel$upper_pindel = pindel$start_pindel+10
 pindel$chr_pos_pindel = do.call(paste0,list(pindel$chr,"_",pindel$start_pindel))
 pindel = pindel %>% arrange(chr,start_pindel) %>% as.data.table()
 
-whamg = fread("Golden/insilico_data/Whamg_deleciones_150_tobig",fill = T)
+whamg = fread("data/Whamg_DEL",fill = T)
 whamg$V4 = as.numeric(abs(whamg$V4))
 colnames(whamg) = c("chr","start_whamg","end","length_whamg","GT_whamg")
 whamg$lower_whamg = whamg$start_whamg-10
@@ -78,7 +78,7 @@ whamg$upper_whamg = whamg$start_whamg+10
 whamg$chr_pos_whamg = do.call(paste0,list(whamg$chr,"_",whamg$start_whamg))
 whamg = whamg %>% arrange(chr,start_whamg) %>% as.data.table()
 
-svaba = fread("Golden/insilico_data/Svaba_doble_posicion")
+svaba = fread("data/SVaBA_DEL")
 colnames(svaba) = c("chr","start_svaba","chr2","pos2","GT_svaba")
 
 # remove translocations and change positions
@@ -111,7 +111,7 @@ svaba$chr_pos_svaba = do.call(paste0,list(svaba$chr,"_",svaba$start_svaba))
 svaba = svaba %>% filter(length_svaba>149)
 svaba = svaba %>% arrange(chr,start_svaba) %>% as.data.table()
 
-manta = fread("Golden/insilico_data/Manta_deleciones_150_tobig",fill = T)
+manta = fread("data/Manta_DEL",fill = T)
 manta$V4 = as.numeric(abs(manta$V4))
 colnames(manta) = c("chr","start_manta","end","length_manta","GT_manta")
 manta$lower_manta = manta$start_manta-50
@@ -119,7 +119,7 @@ manta$upper_manta = manta$start_manta+50
 manta$chr_pos_manta = do.call(paste0,list(manta$chr,"_",manta$start_manta))
 manta = manta %>% arrange(chr,start_manta) %>% as.data.table()
 
-cnvnator = fread("Golden/insilico_data/cnvnator_deleciones_150_tobig")
+cnvnator = fread("data/CNVnator_DEL")
 cnvnator$V4 = as.numeric(abs(cnvnator$V4))
 colnames(cnvnator) = c("chr","start_cnvnator","end","length_cnvnator","GT_cnvnator")
 cnvnator$lower_cnvnator = cnvnator$start_cnvnator-300
@@ -169,12 +169,6 @@ dim(my_data2)
 
 my_data2 = unique(my_data2)
 
-#saveRDS(my_data2,"Golden/insilico_data/outputs/merge_data_deletions.rds")
-
-#write.csv(my_data2,"Golden/insilico_data/outputs/merge_data_deletions.csv",row.names = F)
-
-my_data2 = readRDS("Golden/outputs/merge_data_deletions.rds")
-
 
 ## add number of callers detected #####
 
@@ -214,7 +208,7 @@ summary(my_data2$reciprocity)
 
 ## add strategy ####
 
-strategies = fread("strategies.csv")
+strategies = fread("ext/strategies.csv")
 
 my_data2$strategy = strategy(my_data2,
                              callers = c("lumpy","delly","pindel","whamg",
@@ -373,7 +367,6 @@ model_g_error
 
 ### choose best model ####
 
-metrics_callers = read.csv("METRICS/deletions_large.csv")
 metrics_callers$Caller = as.character(metrics_callers$Caller)
 
 metrics_callers = metrics_callers[1:8,]
@@ -441,25 +434,25 @@ f_score = round(((2*model_sens*model_spec)/(model_sens + model_spec))/100,3)
 my_data2$prediction = my_pred
 
 
-# que lo detecte al menos 1 caller
+# detected 1 caller
 
 det_call = my_data2 %>% filter(callers_detected %in% 1:9)
 
 callers1 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 2 caller y 2 estrategias a la vez
+# detected 2 callers and 2 strategies
 
 det_call = my_data2 %>% filter(callers_detected %in% 2:9 & strategy %in% 2:6 & reciprocity >80)
 
 callers2 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 3 caller
+# detected 3 callers and 2 strategies
 
 det_call = my_data2 %>% filter(callers_detected %in% 3:9 & strategy %in% 2:6 & reciprocity >80)
 
 callers3 = logical_sens_spec(det_call)
 
-# que lo detecte al menos 4 caller
+# detected 4 callers and 2 strategies
 
 det_call = my_data2 %>% filter(callers_detected %in% 4:9 & strategy %in% 2:6 & reciprocity >80)
 
@@ -483,16 +476,9 @@ metrics_callers = rbind(metrics_callers,
                         c("","",">=4 caller **",callers4,""))
 
 
-write.csv(metrics_callers,"METRICS/deletion_large.csv",row.names = F)
-
-
-write.csv(my_data2,"Golden/insilico_data/outputs/Deletions_150_tobig_model.csv",row.names = F)
-
 
 ### CV ######
 
-
-# junta manta "0/1" y "1/1"
 
 my_data2$GT_manta[my_data2$GT_manta=="0/1"] = "0/1-1/1"
 my_data2$GT_manta[my_data2$GT_manta=="1/1"] = "0/1-1/1"
@@ -522,10 +508,6 @@ my_data2$strategy[my_data2$strategy=="5"] = "4-5"
 
 table(my_data2$strategy,my_data2$PASS)
 
-
-
-metrics_callers = read.csv("METRICS/deletion_large.csv")
-metrics_callers$Caller = as.character(metrics_callers$Caller)
 
 library(caret)
 library(e1071)
@@ -570,9 +552,6 @@ mod_fit_no_l <- train(factor(PASS) ~ factor(GT_manta) + factor(GT_whamg) + facto
                       data=my_data2_70, method="glm", family="binomial",
                       trControl = ctrl)
 
-saveRDS(mod_fit,"Golden/insilico_data/outputs/model_buena_pinta.rds") # this is the model for the 785 WGS samples
-saveRDS(mod_fit_l_num,"Golden/insilico_data/outputs/model_length_num.rds")
-saveRDS(mod_fit_no_l,"Golden/insilico_data/outputs/model_no_length.rds")
 
 # 0.5
 
@@ -590,679 +569,3 @@ sens_call_cv = round(tp_cv/N*100,3)
 spec_call_cv = round(tp_cv/(fp_cv+tp_cv)*100,3)
 
 f_score_cv = round((2*sens_call_cv*spec_call_cv)/(sens_call_cv+spec_call_cv)/100,3)
-
-# 0.4
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.4,"PASS","NO PASS")
-
-tp_cv_04 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_04 = as.numeric(table(my_pred)[2])-tp_cv_04
-
-sens_call_cv_04 = round(tp_cv_04/N*100,3)
-spec_call_cv_04 = round(tp_cv_04/(fp_cv_04+tp_cv_04)*100,3)
-
-f_score_cv_04 = round((2*sens_call_cv_04*spec_call_cv_04)/(sens_call_cv_04+spec_call_cv_04)/100,3)
-
-
-# 0.3
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.3,"PASS","NO PASS")
-
-tp_cv_03 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_03 = as.numeric(table(my_pred)[2])-tp_cv_03
-
-sens_call_cv_03 = round(tp_cv_03/N*100,3)
-spec_call_cv_03 = round(tp_cv_03/(fp_cv_03+tp_cv_03)*100,3)
-
-f_score_cv_03 = round((2*sens_call_cv_03*spec_call_cv_03)/(sens_call_cv_03+spec_call_cv_03)/100,3)
-
-
-# 0.2
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.2,"PASS","NO PASS")
-
-tp_cv_02 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_02 = as.numeric(table(my_pred)[2])-tp_cv_02
-
-sens_call_cv_02 = round(tp_cv_02/N*100,3)
-spec_call_cv_02 = round(tp_cv_02/(fp_cv_02+tp_cv_02)*100,3)
-
-f_score_cv_02 = round((2*sens_call_cv_02*spec_call_cv_02)/(sens_call_cv_02+spec_call_cv_02)/100,3)
-
-
-# 0.1
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.1,"PASS","NO PASS")
-
-N = as.numeric(table(my_data2_70$PASS)[2])
-
-tp_cv_01 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_01 = as.numeric(table(my_pred)[2])-tp_cv_01
-
-sens_call_cv_01 = round(tp_cv_01/N*100,3)
-spec_call_cv_01 = round(tp_cv_01/(fp_cv_01+tp_cv_01)*100,3)
-
-f_score_cv_01 = round((2*sens_call_cv_01*spec_call_cv_01)/(sens_call_cv_01+spec_call_cv_01)/100,3)
-
-
-# 0.6
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.6,"PASS","NO PASS")
-
-tp_cv_06 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_06 = as.numeric(table(my_pred)[2])-tp_cv_06
-
-sens_call_cv_06 = round(tp_cv_06/N*100,3)
-spec_call_cv_06 = round(tp_cv_06/(fp_cv_06+tp_cv_06)*100,3)
-
-f_score_cv_06 = round((2*sens_call_cv_06*spec_call_cv_06)/(sens_call_cv_06+spec_call_cv_06)/100,3)
-
-
-# 0.7
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.7,"PASS","NO PASS")
-
-tp_cv_07 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_07 = as.numeric(table(my_pred)[2])-tp_cv_07
-
-sens_call_cv_07 = round(tp_cv_07/N*100,3)
-spec_call_cv_07 = round(tp_cv_07/(fp_cv_07+tp_cv_07)*100,3)
-
-f_score_cv_07 = round((2*sens_call_cv_07*spec_call_cv_07)/(sens_call_cv_07+spec_call_cv_07)/100,3)
-
-
-# 0.8
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.8,"PASS","NO PASS")
-
-tp_cv_08 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_08 = as.numeric(table(my_pred)[2])-tp_cv_08
-
-sens_call_cv_08 = round(tp_cv_08/N*100,3)
-spec_call_cv_08 = round(tp_cv_08/(fp_cv_08+tp_cv_08)*100,3)
-
-f_score_cv_08 = round((2*sens_call_cv_08*spec_call_cv_08)/(sens_call_c
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=1 caller",callers1,""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=2 caller **",callers2,""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=3 caller **",callers3,""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=4 caller **",callers4,""))
-
-
-write.csv(metrics_callers,"METRICS/deletion_large.csv",row.names = F)
-
-
-write.csv(my_data2,"Golden/insilico_data/outputs/Deletions_150_tobig_model.csv",row.names = F)
-
-
-### CV ######
-
-
-# junta manta "0/1" y "1/1"
-
-my_data2$GT_manta[my_data2$GT_manta=="0/1"] = "0/1-1/1"
-my_data2$GT_manta[my_data2$GT_manta=="1/1"] = "0/1-1/1"
-
-table(my_data2$GT_manta,my_data2$PASS)
-
-my_data2$GT_cnvnator[my_data2$GT_cnvnator=="0/1"] = "0/1-1/1"
-my_data2$GT_cnvnator[my_data2$GT_cnvnator=="1/1"] = "0/1-1/1"
-
-my_data2$GT_delly[my_data2$GT_delly=="0/1"] = "0/1-1/1"
-my_data2$GT_delly[my_data2$GT_delly=="1/1"] = "0/1-1/1"
-
-my_data2$GT_lumpy[my_data2$GT_lumpy=="0/1"] = "0/1-1/1"
-my_data2$GT_lumpy[my_data2$GT_lumpy=="1/1"] = "0/1-1/1"
-
-my_data2$GT_pindel[my_data2$GT_pindel=="0/1"] = "0/1-1/1"
-my_data2$GT_pindel[my_data2$GT_pindel=="1/1"] = "0/1-1/1"
-
-my_data2$GT_svaba[my_data2$GT_svaba=="0/1"] = "0/1-1/1"
-my_data2$GT_svaba[my_data2$GT_svaba=="1/1"] = "0/1-1/1"
-
-my_data2$GT_whamg[my_data2$GT_whamg=="0/1"] = "0/1-1/1"
-my_data2$GT_whamg[my_data2$GT_whamg=="1/1"] = "0/1-1/1"
-
-my_data2$strategy[my_data2$strategy=="4"] = "4-5"
-my_data2$strategy[my_data2$strategy=="5"] = "4-5"
-
-table(my_data2$strategy,my_data2$PASS)
-
-
-
-metrics_callers = read.csv("METRICS/deletion_large.csv")
-metrics_callers$Caller = as.character(metrics_callers$Caller)
-
-library(caret)
-library(e1071)
-
-ctrl <- trainControl(method = "repeatedcv", number = 10, 
-                     savePredictions = TRUE)
-
-## 70-30
-
-0.7*nrow(my_data2)
-
-set.seed(2589)
-
-training = sample(1:nrow(my_data2),2392)
-
-table(my_data2$PASS,useNA = "always")
-
-my_data2$PASS = as.factor(my_data2$PASS)
-
-my_data2_70 = my_data2[training,]
-
-table(my_data2_70$PASS,useNA = "always")
-
-mod_fit <- train(factor(PASS) ~ factor(GT_manta) + factor(GT_whamg) + factor(GT_delly) + 
-                   factor(GT_lumpy) + factor(GT_pindel) + factor(GT_cnvnator) + 
-                   factor(GT_svaba) + factor(length_stretch) + factor(strategy), 
-                 data=my_data2_70, method="glm", family="binomial",
-                 trControl = ctrl)
-
-summary(mod_fit)
-
-
-mod_fit_l_num <- train(factor(PASS) ~ factor(GT_manta) + factor(GT_whamg) + factor(GT_delly) + 
-                   factor(GT_lumpy) + factor(GT_pindel) + factor(GT_cnvnator) + 
-                   factor(GT_svaba) + as.numeric(length) + factor(strategy), 
-                 data=my_data2_70, method="glm", family="binomial",
-                 trControl = ctrl)
-
-mod_fit_no_l <- train(factor(PASS) ~ factor(GT_manta) + factor(GT_whamg) + factor(GT_delly) + 
-                         factor(GT_lumpy) + factor(GT_pindel) + factor(GT_cnvnator) + 
-                         factor(GT_svaba) + factor(strategy), 
-                       data=my_data2_70, method="glm", family="binomial",
-                       trControl = ctrl)
-
-saveRDS(mod_fit,"Golden/insilico_data/outputs/model_buena_pinta.rds")
-saveRDS(mod_fit_l_num,"Golden/insilico_data/outputs/model_length_num.rds")
-saveRDS(mod_fit_no_l,"Golden/insilico_data/outputs/model_no_length.rds")
-
-# 0.5
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.5,"PASS","NO PASS")
-
-N = as.numeric(table(my_data2_70$PASS)[2])
-
-tp_cv = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv = as.numeric(table(my_pred)[2])-tp_cv
-
-sens_call_cv = round(tp_cv/N*100,3)
-spec_call_cv = round(tp_cv/(fp_cv+tp_cv)*100,3)
-
-f_score_cv = round((2*sens_call_cv*spec_call_cv)/(sens_call_cv+spec_call_cv)/100,3)
-
-# 0.4
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.4,"PASS","NO PASS")
-
-tp_cv_04 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_04 = as.numeric(table(my_pred)[2])-tp_cv_04
-
-sens_call_cv_04 = round(tp_cv_04/N*100,3)
-spec_call_cv_04 = round(tp_cv_04/(fp_cv_04+tp_cv_04)*100,3)
-
-f_score_cv_04 = round((2*sens_call_cv_04*spec_call_cv_04)/(sens_call_cv_04+spec_call_cv_04)/100,3)
-
-
-# 0.3
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.3,"PASS","NO PASS")
-
-tp_cv_03 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_03 = as.numeric(table(my_pred)[2])-tp_cv_03
-
-sens_call_cv_03 = round(tp_cv_03/N*100,3)
-spec_call_cv_03 = round(tp_cv_03/(fp_cv_03+tp_cv_03)*100,3)
-
-f_score_cv_03 = round((2*sens_call_cv_03*spec_call_cv_03)/(sens_call_cv_03+spec_call_cv_03)/100,3)
-
-
-# 0.2
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.2,"PASS","NO PASS")
-
-tp_cv_02 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_02 = as.numeric(table(my_pred)[2])-tp_cv_02
-
-sens_call_cv_02 = round(tp_cv_02/N*100,3)
-spec_call_cv_02 = round(tp_cv_02/(fp_cv_02+tp_cv_02)*100,3)
-
-f_score_cv_02 = round((2*sens_call_cv_02*spec_call_cv_02)/(sens_call_cv_02+spec_call_cv_02)/100,3)
-
-
-# 0.1
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.1,"PASS","NO PASS")
-
-N = as.numeric(table(my_data2_70$PASS)[2])
-
-tp_cv_01 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_01 = as.numeric(table(my_pred)[2])-tp_cv_01
-
-sens_call_cv_01 = round(tp_cv_01/N*100,3)
-spec_call_cv_01 = round(tp_cv_01/(fp_cv_01+tp_cv_01)*100,3)
-
-f_score_cv_01 = round((2*sens_call_cv_01*spec_call_cv_01)/(sens_call_cv_01+spec_call_cv_01)/100,3)
-
-
-# 0.6
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.6,"PASS","NO PASS")
-
-tp_cv_06 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_06 = as.numeric(table(my_pred)[2])-tp_cv_06
-
-sens_call_cv_06 = round(tp_cv_06/N*100,3)
-spec_call_cv_06 = round(tp_cv_06/(fp_cv_06+tp_cv_06)*100,3)
-
-f_score_cv_06 = round((2*sens_call_cv_06*spec_call_cv_06)/(sens_call_cv_06+spec_call_cv_06)/100,3)
-
-
-# 0.7
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.7,"PASS","NO PASS")
-
-tp_cv_07 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_07 = as.numeric(table(my_pred)[2])-tp_cv_07
-
-sens_call_cv_07 = round(tp_cv_07/N*100,3)
-spec_call_cv_07 = round(tp_cv_07/(fp_cv_07+tp_cv_07)*100,3)
-
-f_score_cv_07 = round((2*sens_call_cv_07*spec_call_cv_07)/(sens_call_cv_07+spec_call_cv_07)/100,3)
-
-
-# 0.8
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.8,"PASS","NO PASS")
-
-tp_cv_08 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_08 = as.numeric(table(my_pred)[2])-tp_cv_08
-
-sens_call_cv_08 = round(tp_cv_08/N*100,3)
-spec_call_cv_08 = round(tp_cv_08/(fp_cv_08+tp_cv_08)*100,3)
-
-f_score_cv_08 = round((2*sens_call_cv_08*spec_call_cv_08)/(sens_call_cv_08+spec_call_cv_08)/100,3)
-
-
-# 0.9
-
-my_pred = predict(mod_fit, newdata=my_data2_70,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.9,"PASS","NO PASS")
-
-tp_cv_09 = as.numeric(table(my_pred,my_data2_70$PASS)[2,2])
-fp_cv_09 = as.numeric(table(my_pred)[2])-tp_cv_09
-
-sens_call_cv_09 = round(tp_cv_09/N*100,3)
-spec_call_cv_09 = round(tp_cv_09/(fp_cv_09+tp_cv_09)*100,3)
-
-f_score_cv_09 = round((2*sens_call_cv_09*spec_call_cv_09)/(sens_call_cv_09+spec_call_cv_09)/100,3)
-
-
-
-# que lo detecte al menos 1 caller
-
-det_call = my_data2_70 %>% filter(callers_detected %in% 1:9)
-
-callers1 = logical_sens_spec(det_call)
-
-# que lo detecte al menos 2 caller y 2 estrategias a la vez
-
-det_call = my_data2_70 %>% filter(callers_detected %in% 2:9 & strategy %in% 2:6 & reciprocity >80)
-
-callers2 = logical_sens_spec(det_call)
-
-# que lo detecte al menos 3 caller
-
-det_call = my_data2_70 %>% filter(callers_detected %in% 3:9 & strategy %in% 2:6 & reciprocity >80)
-
-callers3 = logical_sens_spec(det_call)
-
-# que lo detecte al menos 4 caller
-
-det_call = my_data2_70 %>% filter(callers_detected %in% 4:9 & strategy %in% 2:6 & reciprocity >80)
-
-callers4 = logical_sens_spec(det_call)
-
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 70%, 0.9 threshold)",
-                          c(tp_cv_09,fp_cv_09,sens_call_cv_09,spec_call_cv_09,f_score_cv_09),""))
-
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 70%, 0.8 threshold)",
-                          c(tp_cv_08,fp_cv_08,sens_call_cv_08,spec_call_cv_08,f_score_cv_08),""))
-
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 70%, 0.7 threshold)",
-                          c(tp_cv_07,fp_cv_07,sens_call_cv_07,spec_call_cv_07,f_score_cv_07),""))
-
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 70%, 0.6 threshold)",
-                          c(tp_cv_06,fp_cv_06,sens_call_cv_06,spec_call_cv_06,f_score_cv_06),""))
-
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 70%, 0.5 threshold)",
-                          c(tp_cv,fp_cv,sens_call_cv,spec_call_cv,f_score_cv),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 70%, 0.4 threshold)",
-                          c(tp_cv_04,fp_cv_04,sens_call_cv_04,spec_call_cv_04,f_score_cv_04),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 70%, 0.3 threshold)",
-                          c(tp_cv_03,fp_cv_03,sens_call_cv_03,spec_call_cv_03,f_score_cv_03),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 70%, 0.2 threshold)",
-                          c(tp_cv_02,fp_cv_02,sens_call_cv_02,spec_call_cv_02,f_score_cv_02),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 70%, 0.1 threshold)",
-                          c(tp_cv_01,fp_cv_01,sens_call_cv_01,spec_call_cv_01,f_score_cv_01),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=1 caller",callers1,""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=2 caller **",callers2,""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=3 caller **",callers3,""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=4 caller **",callers4,""))
-
-
-my_data2_30 = my_data2[-training,]
-
-# 0.5
-
-my_pred = predict(mod_fit, newdata=my_data2_30,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.5,"PASS","NO PASS")
-
-N = as.numeric(table(my_data2_30$PASS)[2])
-
-tp_cv = as.numeric(table(my_pred,my_data2_30$PASS)[2,2])
-fp_cv = as.numeric(table(my_pred)[2])-tp_cv
-
-sens_call_cv = round(tp_cv/N*100,3)
-spec_call_cv = round(tp_cv/(fp_cv+tp_cv)*100,3)
-
-f_score_cv = round((2*sens_call_cv*spec_call_cv)/(sens_call_cv+spec_call_cv)/100,3)
-
-# 0.4
-
-my_pred = predict(mod_fit, newdata=my_data2_30,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.4,"PASS","NO PASS")
-
-tp_cv_04 = as.numeric(table(my_pred,my_data2_30$PASS)[2,2])
-fp_cv_04 = as.numeric(table(my_pred)[2])-tp_cv_04
-
-sens_call_cv_04 = round(tp_cv_04/N*100,3)
-spec_call_cv_04 = round(tp_cv_04/(fp_cv_04+tp_cv_04)*100,3)
-
-f_score_cv_04 = round((2*sens_call_cv_04*spec_call_cv_04)/(sens_call_cv_04+spec_call_cv_04)/100,3)
-
-
-# 0.3
-
-my_pred = predict(mod_fit, newdata=my_data2_30,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.3,"PASS","NO PASS")
-
-tp_cv_03 = as.numeric(table(my_pred,my_data2_30$PASS)[2,2])
-fp_cv_03 = as.numeric(table(my_pred)[2])-tp_cv_03
-
-sens_call_cv_03 = round(tp_cv_03/N*100,3)
-spec_call_cv_03 = round(tp_cv_03/(fp_cv_03+tp_cv_03)*100,3)
-
-f_score_cv_03 = round((2*sens_call_cv_03*spec_call_cv_03)/(sens_call_cv_03+spec_call_cv_03)/100,3)
-
-
-# 0.2
-
-my_pred = predict(mod_fit, newdata=my_data2_30,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.2,"PASS","NO PASS")
-
-tp_cv_02 = as.numeric(table(my_pred,my_data2_30$PASS)[2,2])
-fp_cv_02 = as.numeric(table(my_pred)[2])-tp_cv_02
-
-sens_call_cv_02 = round(tp_cv_02/N*100,3)
-spec_call_cv_02 = round(tp_cv_02/(fp_cv_02+tp_cv_02)*100,3)
-
-f_score_cv_02 = round((2*sens_call_cv_02*spec_call_cv_02)/(sens_call_cv_02+spec_call_cv_02)/100,3)
-
-# 0.1
-
-my_pred = predict(mod_fit, newdata=my_data2_30,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.1,"PASS","NO PASS")
-
-tp_cv_01 = as.numeric(table(my_pred,my_data2_30$PASS)[2,2])
-fp_cv_01 = as.numeric(table(my_pred)[2])-tp_cv_01
-
-sens_call_cv_01 = round(tp_cv_01/N*100,3)
-spec_call_cv_01 = round(tp_cv_01/(fp_cv_01+tp_cv_01)*100,3)
-
-f_score_cv_01 = round((2*sens_call_cv_01*spec_call_cv_01)/(sens_call_cv_01+spec_call_cv_01)/100,3)
-
-# 0.6
-
-my_pred = predict(mod_fit, newdata=my_data2_30,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.6,"PASS","NO PASS")
-
-tp_cv_06 = as.numeric(table(my_pred,my_data2_30$PASS)[2,2])
-fp_cv_06 = as.numeric(table(my_pred)[2])-tp_cv_06
-
-sens_call_cv_06 = round(tp_cv_06/N*100,3)
-spec_call_cv_06 = round(tp_cv_06/(fp_cv_06+tp_cv_06)*100,3)
-
-f_score_cv_06 = round((2*sens_call_cv_06*spec_call_cv_06)/(sens_call_cv_06+spec_call_cv_06)/100,3)
-
-
-# 0.7
-
-my_pred = predict(mod_fit, newdata=my_data2_30,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.7,"PASS","NO PASS")
-
-tp_cv_07 = as.numeric(table(my_pred,my_data2_30$PASS)[2,2])
-fp_cv_07 = as.numeric(table(my_pred)[2])-tp_cv_07
-
-sens_call_cv_07 = round(tp_cv_07/N*100,3)
-spec_call_cv_07 = round(tp_cv_07/(fp_cv_07+tp_cv_07)*100,3)
-
-f_score_cv_07 = round((2*sens_call_cv_07*spec_call_cv_07)/(sens_call_cv_07+spec_call_cv_07)/100,3)
-
-
-# 0.8
-
-my_pred = predict(mod_fit, newdata=my_data2_30,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.8,"PASS","NO PASS")
-
-tp_cv_08 = as.numeric(table(my_pred,my_data2_30$PASS)[2,2])
-fp_cv_08 = as.numeric(table(my_pred)[2])-tp_cv_08
-
-sens_call_cv_08 = round(tp_cv_08/N*100,3)
-spec_call_cv_08 = round(tp_cv_08/(fp_cv_08+tp_cv_08)*100,3)
-
-f_score_cv_08 = round((2*sens_call_cv_08*spec_call_cv_08)/(sens_call_cv_08+spec_call_cv_08)/100,3)
-
-
-# 0.9
-
-my_pred = predict(mod_fit, newdata=my_data2_30,type = "prob")
-
-my_pred = my_pred[,1]
-my_pred = ifelse(my_pred<0.9,"PASS","NO PASS")
-
-tp_cv_09 = as.numeric(table(my_pred,my_data2_30$PASS)[2,2])
-fp_cv_09 = as.numeric(table(my_pred)[2])-tp_cv_09
-
-sens_call_cv_09 = round(tp_cv_09/N*100,3)
-spec_call_cv_09 = round(tp_cv_09/(fp_cv_09+tp_cv_09)*100,3)
-
-f_score_cv_09 = round((2*sens_call_cv_09*spec_call_cv_09)/(sens_call_cv_09+spec_call_cv_09)/100,3)
-
-
-
-
-# que lo detecte al menos 1 caller
-
-det_call = my_data2_30 %>% filter(callers_detected %in% 1:9)
-
-callers1 = logical_sens_spec(det_call)
-
-# que lo detecte al menos 2 caller y 2 estrategias a la vez
-
-det_call = my_data2_30 %>% filter(callers_detected %in% 2:9 & strategy %in% 2:6 & reciprocity >80)
-
-callers2 = logical_sens_spec(det_call)
-
-# que lo detecte al menos 3 caller
-
-det_call = my_data2_30 %>% filter(callers_detected %in% 3:9 & strategy %in% 2:6 & reciprocity >80)
-
-callers3 = logical_sens_spec(det_call)
-
-# que lo detecte al menos 4 caller
-
-det_call = my_data2_30 %>% filter(callers_detected %in% 4:9 & strategy %in% 2:6 & reciprocity >80)
-
-callers4 = logical_sens_spec(det_call)
-
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 30%, 0.9 threshold)",
-                          c(tp_cv_09,fp_cv_09,sens_call_cv_09,spec_call_cv_09,f_score_cv_09),""))
-
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 30%, 0.8 threshold)",
-                          c(tp_cv_08,fp_cv_08,sens_call_cv_08,spec_call_cv_08,f_score_cv_08),""))
-
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 30%, 0.7 threshold)",
-                          c(tp_cv_07,fp_cv_07,sens_call_cv_07,spec_call_cv_07,f_score_cv_07),""))
-
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 30%, 0.6 threshold)",
-                          c(tp_cv_06,fp_cv_06,sens_call_cv_06,spec_call_cv_06,f_score_cv_06),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 30%, 0.5 threshold)",
-                          c(tp_cv,fp_cv,sens_call_cv,spec_call_cv,f_score_cv),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 30%, 0.4 threshold)",
-                          c(tp_cv_04,fp_cv_04,sens_call_cv_04,spec_call_cv_04,f_score_cv_04),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 30%, 0.3 threshold)",
-                          c(tp_cv_03,fp_cv_03,sens_call_cv_03,spec_call_cv_03,f_score_cv_03),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 30%, 0.2 threshold)",
-                          c(tp_cv_02,fp_cv_02,sens_call_cv_02,spec_call_cv_02,f_score_cv_02),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("",N,"LR (training 30%, 0.1 threshold)",
-                          c(tp_cv_01,fp_cv_01,sens_call_cv_01,spec_call_cv_01,f_score_cv_01),""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=1 caller",callers1,""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=2 caller **",callers2,""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=3 caller **",callers3,""))
-
-metrics_callers = rbind(metrics_callers,
-                        c("","",">=4 caller **",callers4,""))
-
-write.csv(metrics_callers,"METRICS/deletion_large.csv",row.names = F)
-
-metrics_callers = read.csv("METRICS/deletion_large.csv")
-
-metrics_callers$F1.Score = ((2*metrics_callers$Sensitivity*metrics_callers$Precision)/
-                              (metrics_callers$Sensitivity + metrics_callers$Precision))
-
-head(metrics_callers)
-library(xtable)
-print(xtable(metrics_callers[,-1],digits = 2),include.rownames = F)
