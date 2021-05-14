@@ -5,27 +5,25 @@ library(e1071)
 
 args <- commandArgs(trailingOnly = TRUE)
 i= as.numeric(args[2])
-source("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/functions.R")
-
-strategies = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/strategies.csv")
-
-mod_fit = readRDS("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplications/Golden/model_duplications.rds")
-
-ids = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/all_samplesok",header = F)
-
+              
+source("ext/functions.R")
+              
+strategies = fread("ext/strategies.csv")
+              
+mod_fit = readRDS("1_LRM/models/LRM_model_DUP.rds")
+              
+ids = fread("ext/all_samplesok",header = F)
+              
 ids = ids$V1
 
-#i <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
-#i=1
 print(ids[i])
+              
+dir.create(paste0("/2_merge_callers/DUP/outputs/",ids[i]))
+              
 
-dir.create(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_callers/",ids[i]))
+# read VCF files ########
 
- j= as.numeric(args[1])
-
-  # read vcfs Dani files ########
-
-delly = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/delly/",ids[i],"_Delly_duplicaciones"))
+delly = fread(paste0("/2_merge_callers/DUP/data/Delly/",ids[i],"_DUP"))
 delly = delly[,1:5]
 delly$V4 = as.numeric(abs(delly$V4))
 colnames(delly) = c("chr","start_delly","end","length_delly","GT_delly")
@@ -43,7 +41,7 @@ delly = delly %>% filter(length_delly>30)
 table(delly$chr)
 dim(delly)
 
-lumpy = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/Lumpy/",ids[i],"_lumpy_duplication"))
+lumpy = fread(paste0("/2_merge_callers/DUP/data/Lumpy/",ids[i],"_DUP"))
 lumpy$V4 = as.numeric(abs(lumpy$V4))
 lumpy = lumpy [,1:5]
 colnames(lumpy) = c("chr","start_lumpy","end","length_lumpy","GT_lumpy")
@@ -58,11 +56,7 @@ lumpy$GT2_lumpy= lumpy$GT_lumpy
 lumpy = lumpy %>% filter(length_lumpy>30)
 
 
-table(lumpy$chr)
-dim(lumpy)
-
-
-pindel = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/Pindel/",ids[i],"_Pindel_duplications"))
+pindel = fread(paste0("/2_merge_callers/DUP/data/Pindel/",ids[i],"_DUP"))
 pindel = pindel [,1:5]
 colnames(pindel) = c("chr","start_pindel","end","length_pindel","GT_pindel")
 pindel$lower_pindel = pindel$start_pindel-10
@@ -77,7 +71,7 @@ table(pindel$chr)
 dim(pindel)
 pindel = pindel %>% filter(length_pindel>30)
 
-whamg = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/whamg/",ids[i],"_whamg_duplication"))
+whamg = fread(paste0("/2_merge_callers/DUP/data/Whamg/",ids[i],"_DUP"))
 whamg = whamg [,1:5]
 whamg$V4 = as.numeric(abs(whamg$V4))
 colnames(whamg) = c("chr","start_whamg","end","length_whamg","GT_whamg")
@@ -89,12 +83,10 @@ whamg$chr[whamg$chr=="Y"] = 24
 whamg$chr = as.character(whamg$chr)
 whamg = whamg %>% filter(chr %in% 1:23)
 whamg$GT2_whamg = whamg$GT_whamg
-dim (whamg)
-table(whamg$chr)
 whamg = whamg %>% filter(length_whamg>30)
 
 
-svaba = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/SVABA/",ids[i],"_SVABA"))
+svaba = fread(paste0("/2_merge_callers/DUP/data/SVaBA/",ids[i],"_DUP"))
 colnames(svaba) = c("chr","start_svaba","chr2","pos2","GT_svaba")
 
 # remove translocations and change positions
@@ -133,7 +125,7 @@ svaba$GT2_svaba = svaba$GT_svaba
 svaba = svaba %>% filter(length_svaba>30)
 
 
-manta = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/manta/",ids[i],"_manta_duplicaciones"))
+manta = fread(paste0("/2_merge_callers/DUP/data/Manta/",ids[i],"_DUP"))
 manta$V4 = as.numeric(abs(manta$V4))
 manta= manta [,1:5]
 colnames(manta) = c("chr","start_manta","end","length_manta","GT_manta")
@@ -149,7 +141,7 @@ dim (manta)
 table(manta$chr)
 manta = manta %>% filter(length_manta>30)
 
-cnvnator = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/CNVator/",ids[i],"_CNVator_duplications"))
+cnvnator = fread(paste0("/2_merge_callers/DUP/data/CNVnator/",ids[i],"_DUP"))
 cnvnator$V4 = as.numeric(abs(cnvnator$V4))
 colnames(cnvnator) = c("chr","start_cnvnator","end","length_cnvnator","GT_cnvnator")
 cnvnator$lower_cnvnator = cnvnator$start_cnvnator-100
@@ -169,13 +161,10 @@ call_windows = data.frame(caller = c("delly","lumpy","pindel","whamg",
 call_windows$caller = as.character(call_windows$caller)
 
 
-      
-#for(j in 1:24){ 
+# filter by chromosome ########
         
-        #j=22
-        
-  # filter by chromosome ########
-        
+j= as.numeric(args[1])
+
         delly_chr = delly %>% filter(chr==j) %>% arrange(start_delly) %>% as.data.table() %>% unique()
         lumpy_chr = lumpy %>% filter(chr==j) %>% arrange(start_lumpy) %>% as.data.table() %>% unique()
         pindel_chr = pindel %>% filter(chr==j) %>% arrange(start_pindel) %>% as.data.table() %>% unique()
@@ -395,7 +384,7 @@ call_windows$caller = as.character(call_windows$caller)
         
         # predict YES/NO threshold 0.5
         
-        my_pred = caret::predict.train(mod_fit,as.data.frame(data_predict)) #paquete caret requiere de "predict.train"
+        my_pred = caret::predict.train(mod_fit,as.data.frame(data_predict)) 
         
         my_pred = ifelse(my_pred=="YES",0,1)
         
@@ -463,9 +452,8 @@ call_windows$caller = as.character(call_windows$caller)
  
   colnames(final_data) = paste0(colnames(final_data),"_",ids[i])
   
-  fwrite(final_data,
-         paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_callers/",ids[i],"/",ids[i],"_Dup_chr_",j),
-             sep = " ",row.names = F,quote = F)
+fwrite(final_data,paste0("/2_merge_callers/DUP/outputs/",ids[i],"/",ids[i],"_DUP_chr_",j),
+                       sep = " ",row.names = F,quote = F)
   
  }
         
