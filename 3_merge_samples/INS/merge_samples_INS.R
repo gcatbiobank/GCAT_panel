@@ -5,13 +5,11 @@ library(R.utils)
 args <- commandArgs(trailingOnly = TRUE)
 batch_job <- args[1] 
 
-batch_job = 17
-
 options(digits = 16,scipen = 16)
 
-source("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/functions.R")
+source("ext/functions.R")
 
-regions = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/length_chromosomes_for_merge.txt")
+regions = fread("ext/length_chromosomes_for_merge.txt")
 
 batch = 5e4
 
@@ -44,21 +42,15 @@ for(batches_chr in 1:nrow(regions)){
   
 }
 
-ids = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/all_samplesok",header = F)
+ids = fread("ext/all_samplesok",header = F)
 
 ids = ids$V1
-
-#ids = ids[1:100]
 
 chunk = region_out[batch_job,]
 
 chr = as.numeric(chunk$CHR)
 start = as.numeric(chunk$start)
 end = as.numeric(chunk$end)
-
- # chr = 1
- # start = 1
- # end = 5000
 
 n_row = 0
 
@@ -70,8 +62,7 @@ my_samples = data.frame()
 
 while(n_row==0 & sample_initial<786){
   
-  sample1 = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_callers_new/",
-                        ids[sample_initial],"/filtered/",ids[sample_initial],"_Ins_chr_",chr,"_filtered"),
+  sample1 = fread(paste0("/2_merge_callers/INS/outputs/",ids[sample_initial],"/",ids[sample_initial],"_INS_",chr),
                   header = T,fill = T)
   
   sample1$PL = "0,255,255"
@@ -122,18 +113,10 @@ while(n_row==0 & sample_initial<786){
 my_samples = as.data.table(my_samples)
 
 
-dir.create("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_samples_new/empty_batches/")
-
-if(sample_initial==786){write.table(region_out[batch_job,],
-                                        paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_samples_new/empty_batches/chr_",chr,"_start_",start,"_end_",end),row.names=F,quote=F)
-}
-
-if(sample_initial<786){
-  
-  for(sample_merge in sample_initial:785){
+for(sample_merge in sample_initial:785){
     
-    sample1 = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_callers_new/",
-                             ids[sample_merge],"/filtered/",ids[sample_merge],"_Ins_chr_",chr,"_filtered"),header = T,fill = T)
+    sample1 = fread(paste0("/2_merge_callers/INS/outputs/",ids[sample_merge],"/",ids[sample_merge],"_INS_",chr),
+                    header = T,fill = T)
     
     which_00 = which(sample1[,12]=="0/0")
     aux = cbind("0/0",sample1[which_00,7:12])
@@ -241,7 +224,6 @@ if(sample_initial<786){
   
   final_merge$start = consensus_merge_samples(my_samples,unique(my_samples$ID),"start_")
   final_merge$start_error = consensus_merge_samples(my_samples,unique(my_samples$ID),"min_window_size_")
-  #final_merge$length = consensus_merge_samples(my_samples,unique(my_samples$ID),"length_")
   
   
   genos = my_samples %>%
@@ -278,12 +260,7 @@ if(sample_initial<786){
     group_by(ID) %>% 
     summarize_at(paste0("PASS_num_",ids),~median(as.numeric(.),na.rm=T)) %>%
     as.data.frame()
-  
-  #repro = my_samples %>%
-    #group_by(ID) %>% 
-    #summarize_at(paste0("reciprocity_",ids),~median(.,na.rm=T)) %>%
-    #as.data.frame()
-  
+
   genos_best = my_samples %>%
     group_by(ID) %>%
     summarize_at(paste0("GT_best_",ids),~paste(unique(na.omit(.)), collapse = ',')) %>%
@@ -321,7 +298,6 @@ if(sample_initial<786){
   final_merge = left_join(final_merge,strategy_var) 
   final_merge = left_join(final_merge,pass) 
   final_merge = left_join(final_merge,pass_num) 
-  #final_merge = left_join(final_merge,repro) 
   final_merge = left_join(final_merge,genos_best)
   
   final_merge = final_merge %>% arrange(start)
@@ -330,24 +306,22 @@ if(sample_initial<786){
   
   print(dim(final_merge))
   
-  dir.create(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_samples_new/chr_",chr))
+  dir.create(paste0("/3_merge_samples/INS/outputs/",chr))
   
   final_merge %>% 
-    fwrite(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_samples_new/chr_",chr,
-                  "/Ins_chr_",chr,"_",as.character(start),"_",as.character(end)),row.names=F,sep=" ",na = "NA")
+    fwrite(paste0("/3_merge_samples/INS/outputs/chr_",chr,
+                  "/INS_chr_",chr,"_",as.character(start),"_",as.character(end)),row.names=F,sep=" ",na = "NA")
   
-  print("Now compress pleaseeeeeeeeeeeeeeee")
+  print("Compressing file")
   
-  system(paste0("gzip /gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_samples_new/chr_",chr,
-                "/Ins_chr_",chr,"_",as.character(start),"_",as.character(end)))
+  system(paste0("/3_merge_samples/INS/outputs/chr_",chr,
+                "/INS_chr_",chr,"_",as.character(start),"_",as.character(end)))
   
-  print("Now generate VCF")
+  print("Generating VCF")
   
-  final_merge = fread(paste0("zcat /gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_samples_new//chr_",chr,
-                             "/Ins_chr_",chr,"_",as.character(start),"_",as.character(end),".gz"))
-  
-  # warning, some variants repeated in the VCF
-  
+  final_merge = fread(paste0("zcat /3_merge_samples/INS/outputs/chr_",chr,
+                             "/INS_chr_",chr,"_",as.character(start),"_",as.character(end),".gz"))
+
   ## make VCF #####
   
   final_merge2 = as.data.frame(final_merge)
@@ -706,18 +680,10 @@ if(sample_initial<786){
   }
   
   
-  fwrite(my_vcf,paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_samples_new/chr_",chr,
-                       "/Ins_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"),row.names=F,sep="\t")
+  fwrite(my_vcf[which_miss_05],paste0("/3_merge_samples/INS/outputs/chr_",chr,
+                       "/INS_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"),row.names=F,sep="\t")
   
-  print("Now compress again pleaseeeeeeeeeeeeeeee")
-  
-  
-  system(paste0("gzip /gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inserciones/merge_samples_new/chr_",chr,
-                "/Ins_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"))
-  
-  
-  
-}
-
-
-
+  print("Compressing final VCF")
+    
+  system(paste0("gzip /3_merge_samples/INS/outputs/chr_",chr,
+                "/INS_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"))
