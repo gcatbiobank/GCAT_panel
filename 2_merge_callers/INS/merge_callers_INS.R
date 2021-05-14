@@ -390,7 +390,7 @@ my_pred = ifelse(my_pred==0,"PASS","NO_PASS")
   
 data_predict$PASS = my_pred
   
-  # predict probability (valores entre 0 y 1)
+  # predict probability
   
 my_pred = predict.train(mod_fit,as.data.frame(data_predict),type = "prob")
   
