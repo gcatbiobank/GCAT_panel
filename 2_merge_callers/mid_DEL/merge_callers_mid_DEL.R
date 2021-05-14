@@ -10,7 +10,7 @@ source("ext/functions.R")
               
 strategies = fread("ext/strategies.csv")
               
-mod_fit = readRDS("1_LRM/LRM_model_mid_DEL.rds")
+mod_fit = readRDS("1_LRM/models/LRM_model_mid_DEL.rds")
               
 ids = fread("ext/all_samplesok",header = F)
               
