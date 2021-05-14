@@ -691,8 +691,7 @@ for(sample_merge in sample_initial:785){
                        "/mid_DEL_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"),row.names=F,sep="\t")
   
   print("Compressing final VCF")
-  
-  
+    
   system(paste0("gzip /3_merge_samples/mid_DEL/outputs/chr_",chr,
                 "/mid_DEL_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"))
   
