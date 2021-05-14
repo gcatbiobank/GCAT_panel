@@ -10,7 +10,7 @@ Code to generate the LRM using insilico data for each Structural Variant (SV) ty
 
 ## 2 Merge callers
 
-Code to merge variant callers for each GCAT individuals and SV type.
+Code to merge variant callers for each GCAT individual and SV type.
 
 ## 3 Merge samples
 
