@@ -5,26 +5,25 @@ library(e1071)
 
 args <- commandArgs(trailingOnly = TRUE)
 i= as.numeric(args[2])
-source("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Translocaciones/functions.R")
-
-mod_fit = readRDS("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Translocaciones/model_translocations.rds")
-
-ids = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/all_samplesok",header = F)
-
+              
+source("ext/functions.R")
+              
+strategies = fread("ext/strategies.csv")
+              
+mod_fit = readRDS("1_LRM/models/LRM_model_INV.rds")
+              
+ids = fread("ext/all_samplesok",header = F)
+              
 ids = ids$V1
 
-strategies = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/strategies.csv")
-
 print(ids[i])
+              
+dir.create(paste0("/2_merge_callers/INV/outputs/",ids[i]))
+              
 
-dir.create(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Translocaciones/merge_callers_new/",ids[i]))
+# read VCF files ########
 
-j= as.numeric(args[1])
-
-
-# read vcfs Dani files ########
-
-delly = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Translocations/Delly/",ids[i],"_Delly_Translocations"))
+delly = fread(paste0("/2_merge_callers/TRA/data/Delly/",ids[i],"_TRA"))
 colnames(delly) = c("chr_1_delly","start_1_delly","chr_2_delly","start_2_delly","GT_delly")
 
 delly$chr_1_delly[delly$chr_1_delly=="X"] = "23"
@@ -153,7 +152,7 @@ if(nrow(delly)>1){
 
 }
 
-lumpy = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Translocations/lumpy/",ids[i],"_lumpy_translocation"))
+lumpy = fread(paste0("/2_merge_callers/TRA/data/Lumpy/",ids[i],"_TRA"))
 colnames(lumpy) = c("chr_1_lumpy","start_1_lumpy","chr_2_lumpy","start_2_lumpy","GT_lumpy")
 
 lumpy = lumpy %>% filter(chr_1_lumpy!="hs37d5")
@@ -299,7 +298,7 @@ if(nrow(lumpy)>1){
 }
 
 
-pindel = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Translocations/Pindel/",ids[i],"_Pindel_translocations"))
+pindel = fread(paste0("/2_merge_callers/TRA/data/Pindel/",ids[i],"_TRA"))
 pindel$GT_pindel = "0/1"
 colnames(pindel) = c("chr_1_pindel","start_1_pindel","chr_2_pindel","start_2_pindel","GT_pindel")
 
@@ -440,7 +439,7 @@ if(nrow(pindel)>1){
 }
 
 
-manta = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Translocations/manta/",ids[i],"_manta_translocaciones"))
+manta = fread(paste0("/2_merge_callers/TRA/data/Manta/",ids[i],"_TRA"))
 colnames(manta) = c("chr_1_manta","start_1_manta","chr_2_manta","start_2_manta","GT_manta")
 
 manta$chr_1_manta[manta$chr_1_manta=="X"] = "23"
@@ -576,7 +575,7 @@ if(nrow(manta)>1){
 
 }
 
-svaba = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/SVABA/",ids[i],"_SVABA"))
+svaba = fread(paste0("/2_merge_callers/TRA/data/SVaBA/",ids[i],"_TRA"))
 colnames(svaba) = c("chr_1_svaba","start_1_svaba","chr_2_svaba","start_2_svaba","GT_svaba")
 
 svaba = svaba %>% filter(chr_1_svaba!="hs37d5")
@@ -1050,13 +1049,5 @@ if(n_rows!=0 & sum(num_callers)>1){
   
   colnames(final_data_out) = paste0(colnames(final_data_out),"_",ids[i])
   
-  fwrite(final_data_out,
-         paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Translocaciones/merge_callers_new/",ids[i],"/",ids[i],"_Trans_chr_",j),
-         sep = " ",row.names = F,quote = F)
-  
-  
-        
-
-
-
-
+fwrite(final_data,paste0("/2_merge_callers/TRA/outputs/",ids[i],"/",ids[i],"_TRA_chr_",j),
+                       sep = " ",row.names = F,quote = F)
