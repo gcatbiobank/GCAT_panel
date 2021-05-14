@@ -443,5 +443,4 @@ colnames(final_data) = paste0(colnames(final_data),"_",ids[i])
                 
 fwrite(final_data,paste0("/2_merge_callers/mid_DEL/outputs/",ids[i],"/",ids[i],"_mid_DEL_chr_",j),
                        sep = " ",row.names = F,quote = F)
-                            
-}
+                          
