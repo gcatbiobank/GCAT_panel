@@ -62,7 +62,7 @@ my_samples = data.frame()
 
 while(n_row==0 & sample_initial<786){
   
-  sample1 = fread(paste0("/2_merge_callers/INV/outputs/",ids[sample_initial],"/",ids[sample_initial],"_INV_",chr),
+  sample1 = fread(paste0("/2_merge_callers/mid_DEL/outputs/",ids[sample_initial],"/",ids[sample_initial],"_mid_DEL_",chr),
                   header = T,fill = T)
   
   sample1$PL = "0,255,255"
@@ -115,7 +115,7 @@ my_samples = as.data.table(my_samples)
  
 for(sample_merge in sample_initial:785){
     
-    sample1 = fread(paste0("/2_merge_callers/INV/outputs/",ids[sample_merge],"/",ids[sample_merge],"_INV_",chr),
+    sample1 = fread(paste0("/2_merge_callers/mid_DEL/outputs/",ids[sample_merge],"/",ids[sample_merge],"_mid_DEL_",chr),
                     header = T,fill = T)
     
     sample1$PL = "0,255,255"
@@ -316,12 +316,12 @@ for(sample_merge in sample_initial:785){
     fwrite(paste0("/3_merge_samples/mid_DEL/outputs/chr_",chr,
                   "/mid_DEL_chr_",chr,"_",as.character(start),"_",as.character(end)),row.names=F,sep=" ",na = "NA")
   
-  print("Now compress file")
+  print("Compressing file")
   
   system(paste0("/3_merge_samples/mid_DEL/outputs/chr_",chr,
                 "/mid_DEL_chr_",chr,"_",as.character(start),"_",as.character(end)))
   
-  print("Now generate VCF")
+  print("Generating VCF")
   
   final_merge = fread(paste0("zcat /3_merge_samples/mid_DEL/outputs/chr_",chr,
                              "/mid_DEL_chr_",chr,"_",as.character(start),"_",as.character(end),".gz"))
@@ -687,18 +687,12 @@ for(sample_merge in sample_initial:785){
   }
   
   
-  fwrite(my_vcf,paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT//Deleciones_mid_size/merge_samples_new/chr_",chr,
-                                       "/Del_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"),row.names=F,sep="\t")
+  fwrite(my_vcf,paste0("/3_merge_samples/mid_DEL/outputs/chr_",chr,
+                       "/mid_DEL_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"),row.names=F,sep="\t")
   
-  print("Now compress again pleaseeeeeeeeeeeeeeee")
+  print("Compressing final VCF")
   
   
-  system(paste0("gzip /gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT//Deleciones_mid_size/merge_samples_new/chr_",chr,
-                "/Del_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"))
+  system(paste0("gzip /3_merge_samples/mid_DEL/outputs/chr_",chr,
+                "/mid_DEL_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"))
   
-
-  
-  }
-
-
-
