@@ -4,36 +4,26 @@ library(caret)
 library(e1071)
 
 args <- commandArgs(trailingOnly = TRUE)
-i=as.numeric(args[2])
-
-source("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/functions.R")
-
-strategies = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/strategies.csv")
-
-mod_fit = readRDS("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inversions/Golden/model_inversions.rds")
-
-ids = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/all_samplesok",header = F)
-
+i= as.numeric(args[2])
+              
+source("ext/functions.R")
+              
+strategies = fread("ext/strategies.csv")
+              
+mod_fit = readRDS("1_LRM/models/LRM_model_INV.rds")
+              
+ids = fread("ext/all_samplesok",header = F)
+              
 ids = ids$V1
 
-#i <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
-#i=1
 print(ids[i])
+              
+dir.create(paste0("/2_merge_callers/INV/outputs/",ids[i]))
+              
 
-dir.create(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inversion/merge_callers/",ids[i]))
+# read VCF files ########
 
-
-# start and end criteria
-
-win_size = c(10,20,50,100,200,300)
-
-my_callers = expand.grid(callers = c("delly","lumpy","pindel","whamg","svaba","manta"),
-                         win_size = win_size)
-
-
-# read vcfs Dani files ########
-
-delly = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inversion/Delly/",ids[i],"_Delly_inversions"))
+delly = fread(paste0("/2_merge_callers/INV/data/Delly/",ids[i],"_INV"))
 delly$V4 = as.numeric(abs(delly$V4))
 colnames(delly) = c("chr","start_delly","end_delly","length_delly","GT_delly")
 
@@ -60,7 +50,7 @@ dim(delly)
 summary(delly$end_delly-delly$start_delly)
 
 
-lumpy = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inversion/lumpy/",ids[i],"_lumpy_inversiones"))
+lumpy = fread(paste0("/2_merge_callers/INV/data/Lumpy/",ids[i],"_INV"))
 lumpy$V4 = as.numeric(abs(lumpy$V4))
 colnames(lumpy) = c("chr","start_lumpy","end_lumpy","length_lumpy","GT_lumpy")
 
@@ -85,7 +75,7 @@ dim(lumpy)
 summary(lumpy$end_lumpy-lumpy$start_lumpy)
 
 
-pindel = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inversion/Pindel/",ids[i],"_Pindel_inversions"))
+pindel = fread(paste0("/2_merge_callers/INV/data/Pindel/",ids[i],"_INV"))
 colnames(pindel) = c("chr","start_pindel","end_pindel","length_pindel","GT_pindel")
 
 pindel = unify_breakpoints(pindel,"pindel")
@@ -109,7 +99,7 @@ dim(pindel)
 summary(pindel$end_pindel-pindel$start_pindel)
 
 
-whamg = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inversion/whamg/",ids[i],"_whamg_inversions"))
+whamg = fread(paste0("/2_merge_callers/INV/data/Whamg/",ids[i],"_INV"))
 colnames(whamg) = c("chr","start_whamg","end_whamg","length_whamg","GT_whamg")
 
 whamg = unify_breakpoints(whamg,"whamg")
@@ -132,7 +122,7 @@ dim (whamg)
 table(whamg$chr)
 summary(whamg$end_whamg-whamg$start_whamg)
 
-manta = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inversion/manta/",ids[i],"_manta_inversions"))
+manta = fread(paste0("/2_merge_callers/INV/data/Manta/",ids[i],"_INV"))
 manta$V4 = as.numeric(abs(manta$V4))
 colnames(manta) = c("chr","start_manta","end_manta","length_manta","GT_manta")
 
@@ -156,7 +146,7 @@ dim (manta)
 table(manta$chr)
 
 
-svaba = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/SVABA/",ids[i],"_SVABA"))
+svaba = fread(paste0("/2_merge_callers/INV/data/SVaBA/",ids[i],"_INV"))
 svaba$length_aux = svaba$V4-svaba$V2
 
 for(j in 1:nrow(svaba)){
@@ -226,11 +216,8 @@ call_windows = data.frame(callers = c("delly","lumpy","pindel","whamg",
 call_windows$callers = as.character(call_windows$caller)
 
       
- #for(j in 1:23){ 
-        
-        #j=1
-        
-  # filter by chromosome ########
+
+# filter by chromosome ########
 
 j= as.numeric(args[1])
 
@@ -506,7 +493,7 @@ j= as.numeric(args[1])
         table(final_data$GT_pindel,useNA = "always")
  
         
-        # GENO->  Escala Lumpy-Pindel-Whamg-Delly-Manta (La mejor opcion!)
+        # GT ->  Order: Lumpy-Pindel-Whamg-Delly-Manta
         
         data_call = final_data %>%  
           dplyr::select(GT_whamg2,
@@ -620,7 +607,7 @@ j= as.numeric(args[1])
         
         # predict YES/NO threshold 0.5
         
-        my_pred = caret::predict.train(mod_fit,as.data.frame(data_predict)) #paquete caret requiere de "predict.train"
+        my_pred = caret::predict.train(mod_fit,as.data.frame(data_predict)) 
         
         my_pred = ifelse(my_pred=="YES",0,1)
         
@@ -628,7 +615,7 @@ j= as.numeric(args[1])
         
         data_predict$PASS = my_pred
         
-        # predict probability (valores entre 0 y 1)
+        # predict probability 
         
         my_pred = predict.train(mod_fit,as.data.frame(data_predict),type = "prob")
         
@@ -682,17 +669,10 @@ j= as.numeric(args[1])
         final_predict = final_predict %>% arrange(start)
         final_predict = final_predict %>% filter(PASS %in% c("PASS","NO_PASS")) ##We delete PASS/NOPASS events in the same variant
   
-  
-  
-
-  colnames(final_predict) = paste0(colnames(final_predict),"_",ids[i])
-  
-  fwrite(final_predict,
-         paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Inversion/merge_callers/",ids[i],"/",ids[i],"_Inv_chr_",j),
-             sep = " ",row.names = F,quote = F)
-  
-
-        
  
-#}
+colnames(final_predict) = paste0(colnames(final_predict),"_",ids[i])
+  
+fwrite(final_data,paste0("/2_merge_callers/INV/outputs/",ids[i],"/",ids[i],"_INV_chr_",j),
+                       sep = " ",row.names = F,quote = F)
+
 
