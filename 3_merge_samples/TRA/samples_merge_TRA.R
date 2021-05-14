@@ -5,13 +5,11 @@ library(R.utils)
 args <- commandArgs(trailingOnly = TRUE)
 batch_job <- args[1] 
 
-#batch_job = 1
-
 options(digits = 16,scipen = 16)
 
-source("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Translocaciones/functions.R")
+source("ext/functions.R")
 
-regions = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/length_chromosomes_for_merge.txt")
+regions = fread("ext/length_chromosomes_for_merge.txt")
 
 batch = 5e4
 
@@ -44,21 +42,15 @@ for(batches_chr in 1:nrow(regions)){
   
 }
 
-ids = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/all_samplesok",header = F)
+ids = fread("ext/all_samplesok",header = F)
 
 ids = ids$V1
-
-#ids = ids[1:5]
 
 chunk = region_out[batch_job,]
 
 chr = as.numeric(chunk$CHR)
 start = as.numeric(chunk$start)
 end = as.numeric(chunk$end)
-
-# chr = 22
-# start = 3440000
-# end = 34410000
 
 n_row = 0
 
