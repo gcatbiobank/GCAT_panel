@@ -4,27 +4,27 @@ library(caret)
 library(e1071)
 
 args <- commandArgs(trailingOnly = TRUE)
+
 i= as.numeric(args[2])
-source("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/functions.R")
-
-strategies = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/strategies.csv")
-
-mod_fit = readRDS("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/model_buena_pinta.rds")
-
-ids = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/all_samplesok",header = F)
-
+              
+source("ext/functions.R")
+              
+strategies = fread("ext/strategies.csv")
+              
+mod_fit = readRDS("1_LRM/models/LRM_model_DEL.rds")
+              
+ids = fread("ext/all_samplesok",header = F)
+              
 ids = ids$V1
 
-#i <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
-#i=39
 print(ids[i])
+              
+dir.create(paste0("/2_merge_callers/DEL/outputs/",ids[i]))
 
-dir.create(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/merge_callers_new/",ids[i]))
 
+# read VCF files ########
 
-# read vcfs Dani files ########
-
-delly = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Delly/",ids[i],"_DELLY_Del"))
+delly = fread(paste0("/2_merge_callers/DEL/data/Delly/",ids[i],"_DEL"))
 delly$V4 = as.numeric(abs(delly$V4))
 colnames(delly) = c("chr","start_delly","end","length_delly","GT_delly")
 delly$lower_delly = delly$start_delly-100
@@ -35,7 +35,7 @@ delly$chr[delly$chr=="X"] = 23
 delly$chr[delly$chr=="Y"] = 24
 delly$chr = as.character(delly$chr)
 
-lumpy = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Lumpy/",ids[i],"_Del_Lumpy"))
+lumpy = fread(paste0("/2_merge_callers/DEL/data/Lumpy/",ids[i],"_DEL"))
 lumpy$V4 = as.numeric(abs(lumpy$V4))
 colnames(lumpy) = c("chr","start_lumpy","end","length_lumpy","GT_lumpy")
 lumpy$lower_lumpy = lumpy$start_lumpy-100
@@ -46,7 +46,7 @@ lumpy$chr[lumpy$chr=="X"] = 23
 lumpy$chr[lumpy$chr=="Y"] = 24
 lumpy$chr = as.character(lumpy$chr)
 
-pindel = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Pindel/",ids[i],"_PINDEL_Del"))
+pindel = fread(paste0("/2_merge_callers/DEL/data/Pindel/",ids[i],"_DEL"))
 colnames(pindel) = c("chr","start_pindel","end","length_pindel","GT_pindel")
 pindel$lower_pindel = pindel$start_pindel-10
 pindel$upper_pindel = pindel$start_pindel+10
@@ -56,7 +56,7 @@ pindel$chr[pindel$chr=="X"] = 23
 pindel$chr[pindel$chr=="Y"] = 24
 pindel$chr = as.character(pindel$chr)
 
-whamg = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Whamg/",ids[i],"_WHAM_del"))
+whamg = fread(paste0("/2_merge_callers/DEL/data/Whamg/",ids[i],"_DEL"))
 whamg$V4 = as.numeric(abs(whamg$V4))
 colnames(whamg) = c("chr","start_whamg","end","length_whamg","GT_whamg")
 whamg$lower_whamg = whamg$start_whamg-10
@@ -67,7 +67,7 @@ whamg$chr[whamg$chr=="X"] = 23
 whamg$chr[whamg$chr=="Y"] = 24
 whamg$chr = as.character(whamg$chr)
 
-svaba = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/SVABA/",ids[i],"_SVABA"))
+svaba = fread(paste0("/2_merge_callers/DEL/data/SVaBA/",ids[i],"_DEL"))
 colnames(svaba) = c("chr","start_svaba","chr2","pos2","GT_svaba")
 
 # remove translocations and change positions
@@ -103,7 +103,7 @@ svaba$chr[svaba$chr=="X"] = 23
 svaba$chr[svaba$chr=="Y"] = 24
 svaba$chr = as.character(svaba$chr)
 
-manta = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/Manta/",ids[i],"_manta_del"))
+manta = fread(paste0("/2_merge_callers/DEL/data/Manta/",ids[i],"_DEL"))
 manta$V4 = as.numeric(abs(manta$V4))
 colnames(manta) = c("chr","start_manta","end","length_manta","GT_manta")
 manta$lower_manta = manta$start_manta-50
@@ -114,7 +114,7 @@ manta$chr[manta$chr=="X"] = 23
 manta$chr[manta$chr=="Y"] = 24
 manta$chr = as.character(manta$chr)
 
-cnvnator = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/CNVnator/",ids[i],"_CNVator_Del"))
+cnvnator = fread(paste0("/2_merge_callers/DEL/data/CNVnator/",ids[i],"_DEL"))
 cnvnator$V4 = as.numeric(abs(cnvnator$V4))
 colnames(cnvnator) = c("chr","start_cnvnator","end","length_cnvnator","GT_cnvnator")
 cnvnator$lower_cnvnator = cnvnator$start_cnvnator-300
@@ -133,9 +133,7 @@ call_windows$caller = as.character(call_windows$caller)
 
 
 
-#for(j in 1:24){ 
-
-  j= as.numeric(args[1])
+j= as.numeric(args[1])
   
   # filter by chromosome ########
   
@@ -314,7 +312,7 @@ call_windows$caller = as.character(call_windows$caller)
   
   # predict YES/NO threshold 0.5
   
-  my_pred = caret::predict.train(mod_fit,as.data.frame(data_predict)) #paquete caret requiere de "predict.train"
+  my_pred = caret::predict.train(mod_fit,as.data.frame(data_predict)) 
   
   my_pred = ifelse(my_pred=="YES",0,1)
   
@@ -392,18 +390,13 @@ call_windows$caller = as.character(call_windows$caller)
     final_data$GT_best[k] = unlist(tstrsplit(final_data$GT_callers[k],","))[which(callers %in% ranking_missing[d])]
   }
   }
-  #final_data$PL = "0,255,255"
-  #final_data$PL[final_data$GT=="0/1"] = "255,0,255"
-  #final_data$PL[final_data$GT=="1/1"] = "255,255,0"
-  #final_data$PL[final_data$GT=="./."] = "0"
   
   colnames(final_data) = paste0(colnames(final_data),"_",ids[i])
   
-  fwrite(final_data,
-         paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones/merge_callers_new/",ids[i],"/",ids[i],"_Del_chr_",j),
-         sep = " ",row.names = F,quote = F)
+  fwrite(final_data,paste0("/2_merge_callers/DEL/outputs/",ids[i],"/",ids[i],"_mid_DEL_chr_",j),
+                           sep = " ",row.names = F,quote = F)
   
   
   }  
-#}
+
 
