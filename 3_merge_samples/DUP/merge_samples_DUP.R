@@ -5,13 +5,11 @@ library(R.utils)
 args <- commandArgs(trailingOnly = TRUE)
 batch_job <- args[1] 
 
-#batch_job = 300
-
 options(digits = 16,scipen = 16)
 
-source("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT//Deleciones/functions.R")
+source("ext/functions.R")
 
-regions = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/length_chromosomes_for_merge.txt")
+regions = fread("ext/length_chromosomes_for_merge.txt")
 
 batch = 5e4
 
@@ -44,21 +42,15 @@ for(batches_chr in 1:nrow(regions)){
   
 }
 
-ids = fread("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT//Deleciones/all_samplesok",header = F)
+ids = fread("ext/all_samplesok",header = F)
 
 ids = ids$V1
-
-#ids = ids[1:400]
 
 chunk = region_out[batch_job,]
 
 chr = as.numeric(chunk$CHR)
 start = as.numeric(chunk$start)
 end = as.numeric(chunk$end)
-
-# chr = 1
-# start = 14400001
-# end = 14450000
 
 n_row = 0
 
@@ -70,9 +62,7 @@ my_samples = data.frame()
 
 while(n_row==0 & sample_initial<786){
 
-  
-  sample1 = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_callers/",
-                         ids[sample_initial],"/regenotype/",ids[sample_initial],"_Dup_chr_",chr,"_regenotype"),
+  sample1 = fread(paste0("/2_merge_callers/DUP/outputs/",ids[sample_initial],"/",ids[sample_initial],"_DUP_",chr),
                   header = T,fill = T)
   
   sample1[,3]=sample1[,15]
@@ -127,17 +117,9 @@ while(n_row==0 & sample_initial<786){
 my_samples = as.data.table(my_samples)
 
 
-dir.create("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT//Duplicaciones/merge_samples_new/empty_batches/")
-
-if(sample_initial==786){write.table(region_out[batch_job,],paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_samples_new/empty_batches/chr_",chr,"_start_",start,"_end_",end),row.names=F,quote=F)
-}
-
-if(sample_initial<786){
-  
-  for(sample_merge in sample_initial:785){
+for(sample_merge in sample_initial:785){
     
-    sample1 = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_callers/",
-                           ids[sample_merge],"/regenotype/",ids[sample_merge],"_Dup_chr_",chr,"_regenotype"),
+    sample1 = fread(paste0("/2_merge_callers/DUP/outputs/",ids[sample_merge],"/",ids[sample_merge],"_DUP_",chr),
                     header = T,fill = T)
     
     sample1[,3]=sample1[,15]
@@ -287,13 +269,7 @@ if(sample_initial<786){
     group_by(ID) %>% 
     summarize_at(paste0("reciprocity_",ids),~median(.,na.rm=T)) %>%
     as.data.frame()
-  
-  # genos_best = my_samples %>%
-  #   group_by(ID) %>%
-  #   summarize_at(paste0("GT_best_",ids),~paste(unique(na.omit(.)), collapse = ',')) %>%
-  #   as.data.frame()
-  # 
-  
+ 
   # add 0/0 genotype 
   
   if(nrow(genos)==1){
@@ -326,7 +302,6 @@ if(sample_initial<786){
   final_merge = left_join(final_merge,pass) 
   final_merge = left_join(final_merge,pass_num) 
   final_merge = left_join(final_merge,repro) 
-  # final_merge = left_join(final_merge,genos_best)
   
   final_merge = final_merge %>% arrange(start)
   
@@ -334,64 +309,27 @@ if(sample_initial<786){
   
   print(dim(final_merge))
   
-  dir.create(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_samples_new/chr_",chr))
+ dir.create(paste0("/3_merge_samples/DUP/outputs/",chr))
   
   final_merge %>% 
-    fwrite(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_samples_new/chr_",chr,
-                  "/Dup_chr_",chr,"_",as.character(start),"_",as.character(end)),row.names=F,sep=" ",na = "NA")
+    fwrite(paste0("/3_merge_samples/DUP/outputs/chr_",chr,
+                  "/DUP_chr_",chr,"_",as.character(start),"_",as.character(end)),row.names=F,sep=" ",na = "NA")
   
-  print("Now compress pleaseeeeeeeeeeeeeeee")
+  print("Compressing file")
   
-  system(paste0("gzip /gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_samples_new/chr_",chr,
-                "/Dup_chr_",chr,"_",as.character(start),"_",as.character(end)))
+  system(paste0("/3_merge_samples/DUP/outputs/chr_",chr,
+                "/DEL_chr_",chr,"_",as.character(start),"_",as.character(end)))
   
-  print("Now generate VCF")
+  print("Generating VCF")
   
-  final_merge = fread(paste0("zcat /gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_samples_new//chr_",chr,
-                             "/Dup_chr_",chr,"_",as.character(start),"_",as.character(end),".gz"))
-  
-    # warning, some variants repeated in the VCF
-  
+  final_merge = fread(paste0("zcat /3_merge_samples/DUP/outputs/chr_",chr,
+                             "/DUP_chr_",chr,"_",as.character(start),"_",as.character(end),".gz"))
+
   ## make VCF #####
   
   final_merge2 = as.data.frame(final_merge)
-  
-  # replace "./." for the best genotype for variants with <5% missing
-  
-  # miss_calculation = final_merge2[,paste0(c("GT_"),ids)]
-  # 
-  # miss_rate = NULL
-  # 
-  # for(i in 1:nrow(miss_calculation)){
-  #   
-  #   aux = sum(miss_calculation[i,]=="./.",na.rm = T)/ncol(miss_calculation)
-  #   
-  #   miss_rate = c(miss_rate,aux)
-  # }
-  # 
-  # which_miss_05 = which(miss_rate<0.05)
-  # 
-  # for(sample_vcf in 1:785){
-  #   
-  #   aux2 = final_merge2[which_miss_05,
-  #                      paste0(c("GT_"),ids[sample_vcf])]
-  #   
-  #   aux = final_merge2[which_miss_05,
-  #                     paste0(c("GT_best_"),ids[sample_vcf])]
-  #   
-  #   which_best = which(t(aux) %in% c("0/0","0/1","1/1"))
-  #   
-  #   if(length(which_best)>0){
-  #     
-  #     final_merge2[which_miss_05,
-  #                 paste0(c("GT_"),ids[sample_vcf])][which_best] = as.character(aux[which_best])
-  #     
-  #   }
-  #   
-  #   print(ids[sample_vcf])
-  # }
-  # 
-  
+
+ 
   # AC allele counts ALT ####
   
   aux = final_merge2[,paste0("GT_",ids)]
@@ -712,18 +650,10 @@ if(sample_initial<786){
   }
   
   
-  fwrite(my_vcf,paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_samples_new/chr_",chr,
-                                       "/Dup_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"),row.names=F,sep="\t")
+  fwrite(my_vcf[which_miss_05],paste0("/3_merge_samples/DUP/outputs/chr_",chr,
+                       "/DUP_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"),row.names=F,sep="\t")
   
-  print("Now compress again pleaseeeeeeeeeeeeeeee")
-  
-  
-  system(paste0("gzip /gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Duplicaciones/merge_samples_new/chr_",chr,
-                "/Dup_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"))
-  
-
-  
-  }
-
-
-
+  print("Compressing final VCF")
+    
+  system(paste0("gzip /3_merge_samples/DUP/outputs/chr_",chr,
+                "/DUP_chr_",chr,"_",as.character(start),"_",as.character(end),".vcf"))
