@@ -15,19 +15,16 @@
               ids = fread("ext/all_samplesok",header = F)
               
               ids = ids$V1
-              
-              #i <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
-              #i=4
-              #for(i in 1:10){
+
               print(ids[i])
               
-              dir.create(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/merge_callers_new/",ids[i]))
+              dir.create(paste0("/2_merge_callers/mid_DEL/outputs/",ids[i]))
               
               j= as.numeric(args[1])
  
               # read vcfs Dani files ########
               
-              delly = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/Delly/",ids[i],"_DELLY_Del_mid_del"))
+              delly = fread(paste0("/2_merge_callers/mid_DEL/data/Delly/",ids[i],"_mid_DEL"))
               delly$V4 = as.numeric(abs(delly$V4))
               colnames(delly) = c("chr","start_delly","end","length_delly","GT_delly")
               delly$lower_delly = delly$start_delly-5
@@ -39,7 +36,7 @@
               delly = delly %>% filter(length_delly>30 & length_delly<151)
               
                       
-              lumpy = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/Lumpy/",ids[i],"_Del_Lumpy_mid_del"))
+              lumpy = fread(paste0("/2_merge_callers/mid_DEL/data/Lumpy/",ids[i],"_mid_DEL"))
               lumpy$V4 = as.numeric(abs(lumpy$V4))
               colnames(lumpy) = c("chr","start_lumpy","end","length_lumpy","GT_lumpy")
               lumpy$lower_lumpy = lumpy$start_lumpy-10
@@ -50,7 +47,7 @@
               lumpy$chr = as.character(lumpy$chr)
               lumpy = lumpy %>% filter(length_lumpy>30 & length_lumpy<151)
               
-              pindel = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/Pindel/",ids[i],"_PINDEL_Del_mid_del"))
+              pindel = fread(paste0("/2_merge_callers/mid_DEL/data/Pindel/",ids[i],"_mid_DEL"))
               colnames(pindel) = c("chr","start_pindel","end","length_pindel","GT_pindel")
               pindel$lower_pindel = pindel$start_pindel-5
               pindel$upper_pindel = pindel$start_pindel+5
@@ -60,7 +57,7 @@
               pindel$chr = as.character(pindel$chr)
               pindel = pindel %>% filter(length_pindel>30 & length_pindel<151)
               
-              whamg = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/Whamg/",ids[i],"_WHAM_del_mid_del"))
+              whamg = fread(paste0("/2_merge_callers/mid_DEL/data/Whamg/",ids[i],"_mid_DEL"))
               whamg$V4 = as.numeric(abs(whamg$V4))
               colnames(whamg) = c("chr","start_whamg","end","length_whamg","GT_whamg")
               whamg$lower_whamg = whamg$start_whamg-10
@@ -71,7 +68,7 @@
               whamg$chr = as.character(whamg$chr)
               whamg = whamg %>% filter(length_whamg>30 & length_whamg<151)
               
-              svaba = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/SVABA/",ids[i],"_mid_del"))
+              svaba = fread(paste0("/2_merge_callers/mid_DEL/data/SVaBA/",ids[i],"_mid_DEL"))
               svaba$length_svaba = abs(nchar(svaba$V3)-nchar(svaba$V4))
               svaba = svaba %>% filter(length_svaba>30 & length_svaba<151)
               colnames(svaba)[c(1,2,5)] = c("chr","start_svaba","GT_svaba")
@@ -85,7 +82,7 @@
               svaba = svaba %>% filter(length_svaba>30 & length_svaba<151)
               
               
-              manta = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/Manta/",ids[i],"_manta_del_50_150_del"), fill = T)
+              manta = fread(paste0("/2_merge_callers/mid_DEL/data/Manta/",ids[i],"_mid_DEL"))
               manta$V4 = as.numeric(abs(manta$V4))
               colnames(manta) = c("chr","start_manta","end","length_manta","GT_manta")
               manta$lower_manta = manta$start_manta-5
@@ -95,11 +92,9 @@
               manta$chr[manta$chr=="Y"] = 24
               manta$chr = as.character(manta$chr)
               
-              #we add "0/1" genotype because Manta for deletions from 30 to 50 doesn't give genotype
-              
-              manta2 = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/Manta/",ids[i],"_30_50_mid_del"), fill=T)
+            
+              manta2 = fread(paste0("/2_merge_callers/mid_DEL/data/Manta/",ids[i],"_mid_DEL_30_50"))
               manta2$length_manta = abs(nchar(manta2$V3)-nchar(manta2$V4))
-              #manta2$V4 = as.numeric(abs(manta2$V4))
               manta2$GT_manta = "2/2"
               manta2 = manta2 %>% filter(length_manta>30 & length_manta<51)
               colnames(manta2)[c(1,2)] = c("chr","start_manta")
@@ -114,7 +109,7 @@
               manta = rbind(manta,manta2)
               manta = manta %>% filter(length_manta>30 & length_manta<151)
               
-              gatk = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/Gatk/",ids[i],"/",ids[i],"_total"))
+              gatk = fread(paste0("/2_merge_callers/mid_DEL/data/Gatk/",ids[i],"_mid_DEL"))
               gatk$length_gatk = abs(nchar(gatk$V3)-nchar(gatk$V4))
               colnames(gatk)[c(1,2,5)] = c("chr","start_gatk","GT_gatk")
               gatk = gatk[,c(1,2,5,6)]
@@ -127,7 +122,7 @@
               gatk$chr = as.character(gatk$chr)
               gatk = gatk %>% filter(length_gatk>30 & length_gatk<151)
               
-              deepvariant = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/Deepvariant/",ids[i],"/",ids[i],"_total"))
+              deepvariant = fread(paste0("/2_merge_callers/mid_DEL/data/Deepvariant/",ids[i],"_mid_DEL"))
               deepvariant$length_deepvariant = abs(nchar(deepvariant$V3)-nchar(deepvariant$V4))
               colnames(deepvariant)[c(1,2,5)] = c("chr","start_deepvariant","GT_deepvariant")
               deepvariant = deepvariant[,c(1,2,5,6)]
@@ -140,7 +135,7 @@
               deepvariant$chr = as.character(deepvariant$chr)
               deepvariant = deepvariant %>% filter(length_deepvariant>30 & length_deepvariant<151)
               
-              strelka = fread(paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/Strelka/",ids[i],"/",ids[i],"_total"))
+              strelka = fread(paste0("/2_merge_callers/mid_DEL/data/Strelka/",ids[i],"_mid_DEL"))
               strelka$length_strelka = abs(nchar(strelka$V3)-nchar(strelka$V4))
               colnames(strelka)[c(1,2,5)] = c("chr","start_strelka","GT_strelka")
               strelka = strelka[,c(1,2,5,6)]
@@ -362,7 +357,7 @@
                 
                 # predict YES/NO threshold 0.5
                 
-                my_pred = caret::predict.train(mod_fit,as.data.frame(data_predict)) #paquete caret requiere de "predict.train"
+                my_pred = caret::predict.train(mod_fit,as.data.frame(data_predict)) 
                 
                 my_pred = ifelse(my_pred=="YES",0,1)
                 
@@ -370,7 +365,7 @@
                 
                 data_predict$PASS = my_pred
         
-                # predict probability (valores entre 0 y 1)
+                # predict probability 
                 
                 my_pred = predict.train(mod_fit,as.data.frame(data_predict),type = "prob")
                 
@@ -463,7 +458,7 @@
                 colnames(final_data) = paste0(colnames(final_data),"_",ids[i])
                 
                 fwrite(final_data,
-                       paste0("/gpfs/projects/bsc05/jordivalls/GCAT_project_all_samples/merge_all_calling_GCAT/Deleciones_mid_size/merge_callers_new/",ids[i],"/",ids[i],"_Del_chr_",j),
+                       paste0("/2_merge_callers/mid_DEL/outputs/",ids[i],"/",ids[i],"_mid_DEL_chr_",j),
                        sep = " ",row.names = F,quote = F)
                             
                 
