@@ -455,8 +455,3 @@ j= as.numeric(args[1])
 fwrite(final_data,paste0("/2_merge_callers/DUP/outputs/",ids[i],"/",ids[i],"_DUP_chr_",j),
                        sep = " ",row.names = F,quote = F)
   
- }
-        
-  
-
-
