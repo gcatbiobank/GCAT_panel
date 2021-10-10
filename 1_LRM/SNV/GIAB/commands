@@ -1,0 +1,12 @@
+DEEPVARIANT
+for i in `ls path/to/DEEPVARIANT/VCf/` ; do  ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 2 );  cat $i | grep -v "#"  | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." |cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 > ./GIAB/deepvariant_snvs_bialelic_final ; done
+
+GATK
+
+for i in `ls path/to/GATK/VCF/` ; do  ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 3 );  cat $i | grep -v "#"  | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." |cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 > ./GIAB/gatk_bialelic_SNVs_pass_final ; done
+
+STRELKA
+
+for i in `ls path/to/strelka2/` ; do  ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 2 );  cat $i | grep -v "#"  | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." |cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 > ./GIAB/strelka_snvs_bialellic_final ; done
+
+
