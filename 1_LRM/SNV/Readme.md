@@ -2,7 +2,7 @@
 
 The SNV model has not been used in the creation of GCAT|panel, due to bias decisions. The model consider all Deepvaraint findings as True positives, and Haplotype Caller and Strelka2 findings as false positives. Nevertheless, here we upload the code to execute the script of SNV model creation, using for training the GIAB sample (NA12878) and test the in-silico sample.  
 
-To execute the script "SNVs_GIAB_model.R" the following R libraries are requiered:
+To execute the script "SNVs_GIAB_model.R" the following R libraries are requiered:  
 library(data.table)  
 library(dplyr)  
 library(xtable)  
