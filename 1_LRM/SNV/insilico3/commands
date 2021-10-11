@@ -1,0 +1,13 @@
+DEEPVARIANT
+for i in `ls path/to/DEEPVARIANT/VCf/` ; do  ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 2 );  cat $i | grep -v "#"  | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." |cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 > ./insilico3/Deepvariant_snvs_normalizados_Insilico3 ; done
+
+GATK
+
+for i in `ls path/to/GATK/VCF/` ; do  ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 3 );  cat $i | grep -v "#"  | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." |cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 > ./insilico3/Gatk_snvs_normalizados_Insilico3 ; done
+
+STRELKA
+
+for i in `ls path/to/strelka2/` ; do  ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 2 );  cat $i | grep -v "#"  | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." |cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 > ./insilico3/strelka_snvs_normalizados_Insilico3; done
+
+
+
