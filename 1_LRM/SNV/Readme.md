@@ -15,4 +15,4 @@ In order to evaluate correctly the precision and recall for each variant caller 
 After the execution of the SNVs_GIAB_model.R script different outputs were generated:  
 1- glm_model.rds. The model to use in real samples (folder 2_merge_callers) 
 2- Tables with precision recall and genotype error of three variant callers and model for NA12878 (train) and in-silico (test): table_snvs_model_giab_Lrm.csv and table_snvs_model_insilico3.csv  
-3- The outputs from GIAB and insilico folders, are stored intermidiate files.  
+3- The outputs from GIAB and insilico3 folders, are stored intermidiate files.  
