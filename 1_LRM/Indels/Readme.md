@@ -14,3 +14,5 @@ After the execution of the SNVs_GIAB_model.R script different outputs were gener
 1- glm_model.rds. The model to use in real samples (folder 2_merge_callers)  
 2- Tables with precision recall and genotype error of three variant callers and model for NA12878 (train) and in-silico (test): table_indel_model_giab_Lrm.csv and table_indel_model_insilico3.csv  
 3- The outputs from GIAB and insilico3 folders save intermidiate files.  
+
+To execute the script, with other input data, you have to change manually the input files. Besides, the script must be executed in the cloned folder.
