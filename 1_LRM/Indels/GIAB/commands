@@ -1,0 +1,30 @@
+GATK
+
+DELETIONS 1 TO 30
+
+for i in `ls path/to/vcf` ; do ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 3 );  cat $i | grep -v "#" | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." | cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 | awk 'length($3) > length($4)' | awk -v x=31 'length ($3)<x' > output_vcf_preprocessed ; done
+
+INSERTIONS 1 TO 30
+
+for i in `ls path/to/vcf` ; do ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 3 );  cat $i | grep -v "#" | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." | cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 | awk 'length($3) <  length($4)' | awk -v x=31 'length ($4)<x' > output_vcf_preprocessed ; done
+
+STRELKA
+
+DELETIONS 1 TO 30
+
+for i in `ls path/to/vcf` ; do ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 2 );  cat $i | grep -v "#" | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." | cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 | awk 'length($3) >  length($4)' | awk -v x=31 'length ($3)<x' > output_vcf_preprocessed ; done
+
+INSERTIONS 1 to 30
+
+for i in `ls path/to/vcf` ; do ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 2 );  cat $i | grep -v "#" | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." | cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 | awk 'length($3) < length($4)' | awk -v x=31 'length ($4)<x' > output_vcf_preprocessed ; done
+
+DEEPVARIANT
+
+DELETIONS 1 TO 30
+
+for i in `ls path/to/vcf` ; do ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 2 );  cat $i | grep -v "#" | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." | cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 | awk 'length($3) >  length($4)' | awk -v x=31 'length ($3)<x' > output_vcf_preprocessed ; done
+
+INSERTIONS 1 TO 30
+
+for i in `ls path/to/vcf` ; do ID=$(echo $i | sed 's/\//\t/g' | cut -f 9 ) ; chr=$(echo $i | sed 's/\//\t/g' | cut -f 11 | sed 's/_/\t/g' | cut -f 2 );  cat $i | grep -v "#" | grep -v "0/0" | grep -v "GL..." | grep -v "hs..." | grep -v "\./\." | cut -f 1,2,4,5,10 | sed 's/:/\t/g' | cut -f 1,2,3,4,5 | awk 'length($3) < length($4)' | awk -v x=31 'length ($4)<x' > output_vcf_preprocessed ; done
+
