@@ -1,4 +1,4 @@
-# Create Logistic Regression model for SNV calling
+# Create Logistic Regression model (LRM) for SNV calling
 
 The SNV model has not been used in the creation of GCAT|panel, due to bias decisions. The model consider all Deepvaraint findings as True positives, and Haplotype Caller and Strelka2 findings as false positives. Nevertheless, here we upload the code to execute the script of SNV model creation, using for training the GIAB sample (NA12878) and test the in-silico sample.  
 
