@@ -9,11 +9,11 @@ library(rlang)
 library(R.utils)  
 
 The script requires different inputs:  
-### 1- The strategies used by variant callers to detect the genetic variability (example found in input/strategies.csv)  
-### 2- A list of samples which we performed the variant calling (example found in input/samples)  
-### 3- The output of variant callers for each sample (example of each variant caller output AFTER processing can be foun in input/Deepvaraint,GATK,Strelka2 respectively)  
+#### 1- The strategies used by variant callers to detect the genetic variability (example found in input/strategies.csv)  
+#### 2- A list of samples which we performed the variant calling (example found in input/samples)  
+#### 3- The output of variant callers for each sample (example of each variant caller output AFTER processing can be foun in input/Deepvaraint,GATK,Strelka2 respectively)  
 
-The script is executed as follows:
-Rscript merge_callers_SNVs.R 10 1  
+The script is executed as follows:  
+### Rscript merge_callers_SNVs.R 10 1  
 
 Where the first argument is the chromosome to analyse, and second argument the first sample of ./input/samples list. It is important create the same name file as example presented in this demo, otherwise the merge_callers_SNVs have to be modified. These strategy allows to parallelise the merge by sample and chromosome. We recommended follow the same folder structure presented here to execute the R script, otherwise, the R code should be modified.  
