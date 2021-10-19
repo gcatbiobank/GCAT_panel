@@ -1,0 +1,4 @@
+CALLER,STRATEGY
+gatk,1
+strelka,2
+deepvariant,3
