@@ -11,7 +11,7 @@ library(R.utils)
 The script requires different inputs:  
 #### 1- The strategies used by variant callers to detect the genetic variability (example found in input/strategies.csv)  
 #### 2- A list of samples which we performed the variant calling (example found in input/samples)  
-#### 3- The output of variant callers for each sample (example of each variant caller output AFTER preprocessing can be found in inputs/Deepvaraint, GATK, Strelka2 respectively)  
+#### 3- The variant caller outputs for each sample (example of each variant caller output AFTER preprocessing can be found in inputs/Deepvaraint, GATK, Strelka2 respectively)  
 
 The script is executed as follows:  
 ##### Rscript merge_callers_SNVs.R 10 1  
