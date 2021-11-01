@@ -14,6 +14,6 @@ The script requires different inputs:
 #### 3- The output of variant callers for each sample (example of each variant caller output AFTER processing can be foun in input/Deepvaraint, GATK, Strelka2 respectively)  
 
 The script is executed as follows:  
-### Rscript merge_callers_SNVs.R 10 1  
+##### Rscript merge_callers_SNVs.R 10 1  
 
 Where the first argument is the chromosome (10), and second argument (1) is the first sample of ./input/samples list. It is important create the same name file as example presented in this demo, otherwise the merge_callers_SNVs.R code have to be modified. These strategies allows to parallelise the merge by sample and chromosome. We recommended follow the same folder structure presented here to execute the R script, otherwise, the R code should be modified.  
