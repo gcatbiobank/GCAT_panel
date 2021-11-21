@@ -6,7 +6,7 @@ Valls-Margarit et al. GCAT|Panel, a comprehensive structural variant haplotype m
 
 ## 1 Logistic Regression Model (LRM)
 
-Code to generate the LRM using ins-ilico data for SNVs Indels and each Structural Variant (SV) type (mid DEL: Deletions 30-150bp; DEL: Deletions; DUP: Duplications; INS: Insertions; INV: Inversions; TRA: Translocations).
+Code to generate the LRM using in-silico data for SNVs Indels and each Structural Variant (SV) type (mid DEL: Deletions 30-150bp; DEL: Deletions; DUP: Duplications; INS: Insertions; INV: Inversions; TRA: Translocations).
 
 ## 2 Merge callers
 
