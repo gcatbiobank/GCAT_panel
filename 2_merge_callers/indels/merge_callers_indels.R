@@ -7,7 +7,6 @@ library(R.utils)
 
 args <- commandArgs(trailingOnly = TRUE)
 chrm <- args[1]
-chrm=10
 options(digits = 16,scipen = 16)
 strategies = fread("./inputs/strategies.csv")
 mod_fit = readRDS("/home/jordi/web/indels/glm_model.rds")
@@ -16,7 +15,6 @@ ids  = fread("./inputs/samples",header = F)
 ids = ids$V1
 #q <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
 q<- as.numeric(args[2])
-q=1
 print(ids[q])
 dir.create(paste0("./outputs/",ids[q]))
 
