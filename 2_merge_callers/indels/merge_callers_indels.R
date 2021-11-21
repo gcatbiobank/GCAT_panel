@@ -29,7 +29,7 @@ deepvariant$ID = do.call(paste0,list(deepvariant$chr,"_",deepvariant$position,"_
 deepvariant$chr[deepvariant$chr=="X"] = 23     
 deepvariant$chr[deepvariant$chr=="Y"] = 24
 
-gatk = fread(paste0("./inputs/GATK/",ids[q],"/",ids[q],"_indel_",chrm,"_indels.vcf.gz"))
+gatk = fread(paste0("./inputs/GATK/",ids[q],"/",ids[q],"_",chrm,"_indels.vcf.gz"))
 colnames(gatk) = c("chr","position","REF","ALT","GT_gatk","AD_gatk","DP_gatk","GQ_gatk")
 aux = tstrsplit(gatk$AD_gatk,split=",")
 gatk$AD_REF_gatk = aux[[1]]
