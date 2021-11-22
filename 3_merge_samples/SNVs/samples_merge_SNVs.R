@@ -7,13 +7,8 @@ batch_job <- args[1]
 num_samples <- args[2]
 real_num_samples <- as.integer(num_samples)
 num_samples = as.integer(num_samples) +1
-#batch_job = 57606
 options(digits = 16,scipen = 16)
-# chr22 batch 56586, 57611
 path_inputs <- args[3]
-path_inputs = "/home/jordi/merge_samples/SNVs/inputs/"
-#source("/home/jordi/merge_samples/functions.R")
-
 
 ## create batches #####
 
