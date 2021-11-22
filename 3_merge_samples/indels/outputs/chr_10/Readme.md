@@ -1,1 +1,1 @@
-Here will write the outputs of merge_sample_indels.R script
+Here the merge_samples_indels.R script will write the outputs.
