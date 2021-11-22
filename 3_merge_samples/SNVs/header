@@ -1,0 +1,42 @@
+##fileformat=VCFv4.3
+##fileDate=20200514
+##source=PLINKv2.00
+##ALT=<ID=ALT,Number=1,Type=String,Description="<DEL> = Large Deletion(>30bp), <INS> = Large de novo insertion (>30bp), <DUP> = Duplication, <INV> = Inversion, <TRA> = Translocation,  <INS:ME:ALU> = ALU, <INS:ME:LINE1> = LINE1 , <INS:ME:SVA> = SVA">
+##QUAL=<ID=PASS,Number=1,Type=String,Description="Proportion of samples which pass the threshold of 0.5 in the Logistic Regression Model">
+##QUAL=<ID=NO_PASS,Number=1,Type=String,Description="Proportion of samples which do not pass the threshold of 0.5 in the Logistic Regression Model">
+##FILTER=<ID=PASS,Description="All filters passed">
+##FILTER=<ID=NO_PASS,Description="Any filters passed">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">
+##INFO=<ID=MAC,Number=A,Type=Float,Description="Minor Allele Count">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=MAF,Number=A,Type=Integer,Description="Minor Allele Frequency">
+##INFO=<ID=CHR2,Number=1,Type=Integer,Description="Chromosom of fragment translocated">
+##INFO=<ID=POS2,Number=1,Type=Integer,Description="End position of translocation">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the structural variant">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="Length of structural variant">
+##INFO=<ID=ERRBKP,Number=1,Type=Integer,Description="Breakpoint error in the START and END position">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=POPVAR,Number=1,Type=String,Description="Population variation; MONOMORPHIC = MAF == 0, SINGLETON = One sample, DOUBLETON = Two samples, RARE= MAF< 0.01, LOW_FREQ = MAF > 0.01 and MAF< 0.05, COMMON = MAF > 0.05">
+##INFO=<ID=N_PASS,Number=1,Type=String,Description="Number of samples which pass the threshold of 0.5 in the Logistic Regression Model">
+##INFO=<ID=N_NOPASS,Number=1,Type=String,Description="Number of samples which do not pass the threshold of 0.5 in the Logistic Regression Model">
+##INFO=<ID=GENO_00,Number=1,Type=String,Description="Number of samples which genotype is 0/0">
+##INFO=<ID=GENO_01,Number=1,Type=String,Description="Number of samples which genotype is 0/1">
+##INFO=<ID=GENO_11,Number=1,Type=String,Description="Number of samples which genotype is 1/1">
+##INFO=<ID=TAB_CALLERS,Number=1,Type=String,Description="Number of varians detected by 1,2,3,4,5,6 and 7 callers respectively">
+##INFO=<ID=MIN_CALLERS,Number=1,Type=String,Description="Minimum number of callers detected one variant">
+##INFO=<ID=MAX_CALLERS,Number=1,Type=String,Description="Maximum number of callers detected one variant">
+##INFO=<ID=MEDIAN_CALLERS,Number=1,Type=String,Description="Median number of callers which detect the variant">
+##INFO=<ID=ASSESS,Number=1,Type=Integer,Description="Provides information on evidence availible to decide insertion site.0 = No overlapping reads at site;1 = Imprecise breakpoint due to greater than expected distance between evidence;2 = discordant pair evidence only -- No split read information;3 = left side TSD evidence only;4 = right side TSD evidence only;5 = TSD decided with split reads, highest possible quality.">
+##INFO=<ID=TSD,Number=1,Type=String,Description="Precise Target Site Duplication for bases, if unknown, value will be NULL">
+##INFO=<ID=INTERNAL,Number=2,Type=String,Description="If insertion internal or close to a gene, listed here followed by a discriptor of the location in the gene (either INTRON, EXON_#, 5_UTR, 3_UTR, PROMOTER, or TERMINATOR)">
+##INFO=<ID=MEINFO,Number=4,Type=String,Description="Mobile element info of the form NAME,START,END,POLARITY; If START or END is unknown, will be -1; If POLARITY is unknown, will be 'null'">
+##INFO=<ID=DIFF,Number=.,Type=String,Description="Coverage and Differences in relation to the LINE1 reference. Form is %2XCoverage:Differences, with differences delimited by ','">
+##INFO=<ID=LP,Number=1,Type=Integer,Description="Total number of discordant pairs supporting the left side of the breakpont">
+##INFO=<ID=RP,Number=1,Type=Integer,Description="Total number of discordant pairs supporting the right side of the breakpont">
+##INFO=<ID=RA,Number=1,Type=Float,Description="Ratio between LP and RP, reported as log2(LP / RP)">
+##INFO=<ID=PRIOR,Number=1,Type=String,Description="True if this site was not discovered in this dataset, but was included on a provided priors list.">
+##INFO=<ID=SR,Number=1,Type=Integer,Description="Total number of SRs at the estimated breakpoint for this site. Recomended to filter sites with <= 2 SRs">
+##INFO=<ID=ISTP,Number=1,Type=Integer,Description="Will be approximate location of twin priming breakpoint in relation to L1 reference; 0 if not twin primed; -1 if no measurement">
+##contig=<ID=22,length=51304566>
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
