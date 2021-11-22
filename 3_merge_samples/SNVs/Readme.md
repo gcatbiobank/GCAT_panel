@@ -21,7 +21,7 @@ Second argument is the sample number to merge.
 Third is the path of outputs obtained from merge_callers step.
 
 The file length_chromosomes_for_merge.txt contains the length of chromosomes from reference genome hs37d5.
-The file samplesok is a list of all samples to merge in the VCF file.
+The file samplesok is a list of all samples to merge in the VCF file (here our cohort are 2 samples).
 The header includes the description of INFO column from VCF file.
 
 The result is a VCF file with all samples merged, including their genotypes and relevant population information.
