@@ -8,11 +8,11 @@ library(data.table)
 library(dplyr)  
 library(R.utils)  
 
-2- Create subfolders for each chromosome in the outputs folder ( i.e: chr_10) and empty_batches folder too.  
+2- To create subfolders for each chromosome in the outputs folder ( i.e: chr_10) and empty_batches folder too.  
 
-3- Before execute samples_merge_SNVs.R script, you must be sure that merge_callers_SNVs.R is executed for each chromosome and sample. samples_merge_SNVs.R script cut by batches of 50000 the chromosome 1 to X, for this reason is recommended obtain all chromosomes merged by caller. Otherwise, the script will breaks, because will miss some chromosome.  
+3- Before to execute samples_merge_SNVs.R script, you must be sure that merge_callers_SNVs.R is executed for each chromosome and sample. samples_merge_SNVs.R script cut by batches of 50000 the chromosome 1 to X, for this reason is recommended obtain all chromosomes merged by caller. Otherwise, the script will breaks, because will miss some chromosome.  
 
-4- Execute the R script in cloned folder like this:
+4- To execute the R script in cloned folder like this:
 
 Rscript samples_merge_SNVs.R 33608 2 path_input files
 
