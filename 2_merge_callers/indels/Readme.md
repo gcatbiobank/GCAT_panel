@@ -1,4 +1,4 @@
-# Merge Variant caller outputs of indels by sample  
+# Merge indel outputs by sample  
 
 In this section we combine by sample the outputs of Deepvariant, Haplotype Caller and Strelka2, filtering the potential false positives with a Logistic Regression Model (created in [1_LRM/indels](https://github.com/gcatbiobank/GCAT_panel/tree/main/1_LRM/Indels) section). The model has been generated using the indels validated in NA12878 sample from Genome In A Bottle Consortium (GIAB) and tested with indels from in-silico sample. The strategy to merge callers by sample and filtering applied can be found in Supplementary material [sections 8.2 and 8.4](https://www.biorxiv.org/content/10.1101/2021.07.20.453041v1) respectively.  
 
