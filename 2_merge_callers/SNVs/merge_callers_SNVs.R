@@ -5,7 +5,6 @@ library(R.utils)
 
 args <- commandArgs(trailingOnly = TRUE)
 chrm <- args[1]
-#chrm=22
 
 options(digits = 16,scipen = 16)
 strategies = fread("./strategies.csv")
