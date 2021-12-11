@@ -4,7 +4,7 @@ Due to their high genotype error produced by variant callers, here we deposited 
 
 ## BAM file creation  
 
-All  scripts provided requires a BAM file for each sample. Here we show an scheme followed to construct the BAM files for this project. Further documentation to create BAM files can be found in [Supplementary materials](https://www.biorxiv.org/content/10.1101/2021.07.20.453041v1)
+All  scripts provided requires a BAM file for each sample. Here we show an scheme followed to construct the BAM files for this project. Further documentation to create BAM files can be found in [Supplementary materials](https://www.biorxiv.org/content/10.1101/2021.07.20.453041v1).
 
 ![supplementary_fig5](https://user-images.githubusercontent.com/28949802/145678443-242c71cb-75b2-4acb-9ce5-6fd37a289560.jpg)
 
