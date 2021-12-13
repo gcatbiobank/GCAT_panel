@@ -10,7 +10,7 @@ The pipline is a combination of python and bash scripts.
 
 ## 1- Selecting the coordinates to count reads in the BAM file
 
-The first python script consist to detemrine the positions where the 2_check_cx.sh script will used to evaluate the median coverage around the duplications.
+The first python script consist to select the coordinates to find the median coverage around duplications.
 
 To execute "1_generate_files_to_count_reads.py" we need to import the following python2 modules:
 
@@ -18,7 +18,7 @@ import re
 import sys  
 import decimal  
 
-As an input, we require the output obtained after the 2_merge_callers step (here provided in inputs folder under the name "insilico_merge_callers_input"). To execute "1_generate_files_to_count_reads.py" we need three arguments":
+As input, we require the output obtained after the 2_merge_callers step (here provided in the inputs folder under the name "insilico_merge_callers_input"). To execute "1_generate_files_to_count_reads.py" we need three arguments":
 
 python 1_generate_files_to_count_reads.py inputs/insilico_merge_callers_input insilico 10 outputs/
 
