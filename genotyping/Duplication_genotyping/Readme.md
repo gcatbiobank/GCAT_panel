@@ -3,12 +3,14 @@
 To re-genotype all duplications obtained after [2_merge_callers](https://github.com/gcatbiobank/GCAT_panel/tree/main/2_merge_callers) step, we need to perform three steps.
 
 1- Create the files to count reads in the BAM file  
-2- Count the reads in the BAM file  
+2- Determining the median coverage of duplications using the BAM file  
 3- Re-genotype duplications for each sample  
 
 The pipline is a combination of python and bash scripts.
 
 ## 1- Create the files to count reads in the BAM file
+
+The first python script consist to detemrine the positions where the 2_check_cx.sh script will used to evaluate the median coverage around the duplications.
 
 To execute "1_generate_files_to_count_reads.py" we need to import the following python2 modules:
 
@@ -20,6 +22,18 @@ Then, as an input, we require the output obtained after the 2_merge_callers step
 
 python 1_generate_files_to_count_reads.py inputs/insilico_merge_callers_input insilico 1 outputs/
 
-Were the first argument is the 2_merge_callers output for duplications, second sample name, third the chromosome and fourth the folder where save the output. The result is the file to obtain read information from BAM file  
+Were the first argument is the 2_merge_callers output for duplications, second sample name, third the chromosome and fourth the folder where save the output. The result is the file used to obtain the total coverage of region where the duplication is detected. read information from BAM file. This file contains 7 columns:  
 
-## 2- Count the reads in the BAM file
+Chromosome, Start_dup, End_dup, Size_dup, distance between current and previous duplication, Breakposition error, and genotype obtanied after merge_callers step.
+
+## 2- Determining the median coverage of duplications using the BAM file
+
+To determine the duplications genotype state (0/1 or 1/1), we need the median coverage of that region. Determining the median coverage of a duplication is a challenge due to two main reasons: 1) the sequencing coverage of a duplication is at least the double of sample general coverage and 2) the sequencing coverage fluctuates around the genome. For this reason, the objective of the second bash script consist to find the median coverage of a region where the duplication is detected.   
+
+To execute 2_check_cx.sh script, we need the get_cx.sh script present in this folder. Besides, we need to install [Samtools](https://github.com/samtools/samtools) in this folder, or change the path where the samtools is installed in 2_check_cx.sh and get_cx.sh scripts. Finally, we need three arguments:
+
+./2_check_cx.sh outputs/insilico_chr10ok.txt inputs/insilico3_test.bam insilico
+
+First argument is the output obtained in the previous step, second argument is the BAM file, and finally, the sample name.
+
+The result, is the same file as previous step, with the median coverage for each duplication.
