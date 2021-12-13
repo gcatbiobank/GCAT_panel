@@ -1,1 +1,1 @@
-"CAUTION" if you execute this example in step 1 will generate " " file, in fourth column change the 0 by 2730859 number. When you execute your samples bu chromosome the second script will work correctly.
+"CAUTION" if you execute this example in step 1 will generate "insilico_10_readinfo.txt" file, in fifth column change the 0 by 2730859 number. When you execute your samples bu chromosome the second script will work correctly.
