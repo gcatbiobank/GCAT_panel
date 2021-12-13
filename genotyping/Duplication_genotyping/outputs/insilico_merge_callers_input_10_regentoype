@@ -1,0 +1,3 @@
+chr_insilico start_insilico GT_insilico length_insilico strategy_insilico reciprocity_insilico callers_detected_insilico name_callers_insilico GT_callers_insilico min_window_size_insilico lower_insilico upper_insilico PASS_insilico PASS_num_insilico insilico_GT_inhouse insilico_coverage_total insilico_coverage_splitreads
+10 8142665 0/1 2350 1 100 1 no_callers None 10 8142655 8142675 PASS 0.992110828432322 0/1 31 17
+10 8776211 1/1 583 1 100 1 no_callers None 10 8776201 8776221 PASS 0.992110828432322 1/1 32 33
