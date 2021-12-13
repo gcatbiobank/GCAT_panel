@@ -18,7 +18,7 @@ import decimal
 
 Then, as an input, we require the output obtained after the 2_merge_callers step (here provided in inputs folder under the name "insilico_merge_callers_input"). To execute "1_generate_files_to_count_reads.py" we need three arguments":
 
-python generate_files_to_count_reads.py inputs/insilico_merge_callers_input insilico 1 outputs/
+python 1_generate_files_to_count_reads.py inputs/insilico_merge_callers_input insilico 1 outputs/
 
 Were the first argument is the 2_merge_callers output for duplications, second sample name, third the chromosome and fourth the folder where save the output. The result is the file to obtain read information from BAM file  
 
