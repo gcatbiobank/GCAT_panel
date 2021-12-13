@@ -20,7 +20,7 @@ import decimal
 
 Then, as an input, we require the output obtained after the 2_merge_callers step (here provided in inputs folder under the name "insilico_merge_callers_input"). To execute "1_generate_files_to_count_reads.py" we need three arguments":
 
-python 1_generate_files_to_count_reads.py inputs/insilico_merge_callers_input insilico 1 outputs/
+python 1_generate_files_to_count_reads.py inputs/insilico_merge_callers_input insilico 10 outputs/
 
 Were the first argument is the 2_merge_callers output for duplications, second sample name, third the chromosome and fourth the folder where save the output. The result is the file used to obtain the total coverage of region where the duplication is detected. read information from BAM file. This file contains 7 columns:  
 
@@ -32,7 +32,7 @@ To determine the duplications genotype state (0/1 or 1/1), we need the median co
 
 To execute 2_check_cx.sh script, we need the get_cx.sh script present in this folder. Besides, we need to install [Samtools](https://github.com/samtools/samtools) in this folder, or change the path where the samtools is installed in 2_check_cx.sh and get_cx.sh scripts. Finally, we need three arguments:
 
-./2_check_cx.sh outputs/insilico_chr10ok.txt inputs/insilico3_test.bam insilico
+./2_check_cx.sh outputs/insilico_chr10.txt inputs/insilico3_test.bam insilico
 
 First argument is the output obtained in the previous step, second argument is the BAM file, and finally, the sample name.
 
