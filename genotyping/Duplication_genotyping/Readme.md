@@ -56,4 +56,4 @@ First is the BAM file, second is the 2_merge_callers output, third is the previo
 
 The resulting output is the 2_merge_callers with three columns. Our genotype evaluated, the median coverage and split reads from duplication breakpoint.
 
-Further filter descriptions of the duplication genotyper, can be found in (supplementary materials)[https://www.biorxiv.org/content/10.1101/2021.07.20.453041v1].
+Further filter descriptions of the duplication genotyper, can be found in [supplementary materials](https://www.biorxiv.org/content/10.1101/2021.07.20.453041v1).
