@@ -40,4 +40,20 @@ The result, is the same file as previous step, with the median coverage for each
 
 ## 3- Re-genotype duplications for each sample
 
+Finally, we have to execute 3_regenotyping_dups.py python script, to re-genotype all sample duplications after 2_merge_callers step. This script requires the following python modules:  
 
+from decimal import *  
+import re  
+import sys  
+import pysam  
+import gzip  
+
+To execute 3_regenotyping_dups python script, we require five arguments:
+
+python 3_regenotyping_dups.py inputs/insilico3_test.bam inputs/insilico_merge_callers_input outputs/insilico_10_readinfo.txt outputs/insilico_merge_callers_input_10_regentoype 100M
+
+First is the BAM file, second is the 2_merge_callers output, third is the previous step output, fourth is the output and fifith the read lenght all match (CIGAR).
+
+The resulting output is the 2_merge_callers with three columns. Our genotype evaluated, the median coverage and split reads from duplication breakpoint.
+
+Further filter descriptions of the duplication genotyper, can be found in (supplementary materials)[https://www.biorxiv.org/content/10.1101/2021.07.20.453041v1].
