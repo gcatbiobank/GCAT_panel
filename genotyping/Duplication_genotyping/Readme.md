@@ -36,4 +36,8 @@ To execute 2_check_cx.sh script, we need the get_cx.sh script present in this fo
 
 First argument is the output obtained in the previous step, second argument is the BAM file, and finally, the sample name.
 
-The result, is the same file as previous step, with the median coverage for each duplication.
+The result, is the same file as previous step, with the median coverage for each duplication.  
+
+## 3- Re-genotype duplications for each sample
+
+
