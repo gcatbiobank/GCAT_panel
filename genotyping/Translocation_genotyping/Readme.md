@@ -14,7 +14,7 @@ import subprocess
 
 Besides we have to load the function bam_count_readsok.py script located in this folder. Is recommended install [Samtools](https://github.com/samtools/samtools) in this folder, otherwise you will have to modify the code of bam_count_readsok.py.
 
-To execute the regenotyping_translocation_bamok.py" script you have to include 7 arguments:
+To execute the regenotyping_translocation_bamok.py script you have to include 7 arguments:
 
 python regenotyping_translocation_bamok.py inputs/input_translocations_merge_callers.txt outputs/merge_callers_with_read_info.txt outputs/merge_callers_regenotype.txt inputs/insilico_small_set.bam insilico 100M outputs/
 
