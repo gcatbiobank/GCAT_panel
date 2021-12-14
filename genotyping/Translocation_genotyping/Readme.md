@@ -16,7 +16,7 @@ Besides we have to load the function bam_count_readsok.py script located in this
 
 To execute the regenotyping_translocation_bamok.py script you have to include 7 arguments:
 
-python regenotyping_translocation_bamok.py inputs/input_translocations_merge_callers.txt outputs/merge_callers_with_read_info.txt outputs/merge_callers_regenotype.txt inputs/insilico_small_set.bam insilico 100M outputs/
+**python regenotyping_translocation_bamok.py inputs/input_translocations_merge_callers.txt outputs/merge_callers_with_read_info.txt outputs/merge_callers_regenotype.txt inputs/insilico_small_set.bam insilico 100M outputs/**
 
 Where the first argument is the 2_merge_callers output, second argument is the 2_merge_callers output with additional column called "our_genotyper" with the new genotype:split read info:total coverage. Third argument is the 2_merge_callers output with the new genotype calculated. This file will be used for 3_merge_samples step. Fourth argument is the BAM file; Fifth argument is the sample name; Sixth argument is the CIGAR read length (in this case is 100M); and Seventh the output path.
 
