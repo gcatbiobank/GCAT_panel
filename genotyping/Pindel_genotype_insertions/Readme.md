@@ -9,6 +9,6 @@ import pysam
 
 Then, the script requires 4 arguments:
 
-python regenotyping_pindel_bam.py input/insilico_pindel_LI.vcf output/insilico_pindel_LI_genotype.vcf input/insilico_small.bam 100M
+**python regenotyping_pindel_bam.py input/insilico_pindel_LI.vcf output/insilico_pindel_LI_genotype.vcf input/insilico_small.bam 100M**
 
 First argument is the Pindel VCF, second argument is the script output, third argument is the BAM file and fourth the read length (CIGAR nomenclature).
