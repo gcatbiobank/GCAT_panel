@@ -1,0 +1,3 @@
+chr_1_insilico start_1_insilico end_1_insilico chr_2_insilico start_2_insilico end_2_insilico GT_insilico length_insilico strategy_insilico reciprocity_insilico callers_detected_insilico name_callers_insilico min_window_size_insilico PASS_insilico PASS_num_insilico our_genotyper
+10 113559437 113559527 14 23103654 23103655 0/1 89 1 1 1 None 200 PASS 0.854645646572062 0/1:33:61
+10 113565059 113565111 22 38300269 38300270 0/1 52 1 1 1 None 200 PASS 0.854645646572062 0/1:25:57
