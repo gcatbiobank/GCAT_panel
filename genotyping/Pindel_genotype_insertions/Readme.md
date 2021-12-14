@@ -1,4 +1,4 @@
-# Genotype Long insertions from Pindel  
+# Genotype Long insertions detected by Pindel  
 
 The genotyper for the de novo insertions detected by Pindel has been done in Python2. To execute "regenotyping_pindel_bam.py" script you need to import the following modules:
 
