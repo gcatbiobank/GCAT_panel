@@ -1,1 +1,1 @@
-"CAUTION" if you execute this example, in step 1 will generate "insilico_chr10.txt" file, in fifth column change the 0 by 2730859 number.
+"CAUTION" if you execute this example, the step 1 will generate the "insilico_chr10.txt" file. Change in the fifth column the 0 by 2730859 number.
