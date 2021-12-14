@@ -20,7 +20,7 @@ import decimal
 
 As input, we require the output obtained after the 2_merge_callers step (here provided in the inputs folder under the name "insilico_merge_callers_input"). To execute "1_generate_files_to_count_reads.py" we need three arguments":
 
-python 1_generate_files_to_count_reads.py inputs/insilico_merge_callers_input insilico 10 outputs/
+**python 1_generate_files_to_count_reads.py inputs/insilico_merge_callers_input insilico 10 outputs/**
 
 Where the first argument is the 2_merge_callers output for duplications, second is the sample name, third is the chromosome and fourth is the folder where save the output. The result is a file with following information separated by 7 columns:  
 
