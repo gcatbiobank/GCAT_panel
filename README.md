@@ -19,3 +19,5 @@ Code to merge all GCAT samples for each variant type.
 ## 4 Genotyping Duplications, Translocations and de novo insertions detected by Pindel  
 
 Code to genotype Duplications, Translocations and de novo insertions from Pindel calling.
+
+Further in-silico description, files and results can be found in http://cg.bsc.es/GCAT_BSC_iberianpanel/ web
