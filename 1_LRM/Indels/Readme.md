@@ -10,6 +10,8 @@ All files to train the model are included in GIAB folder, and files to test the 
 The five columns of input files from GIAB and insilico3 folders corresponds with: Chromosome, Position, Reference allele, Alternate allele, and genotype. These files were generated with outputs from Haplotype Caller, Deepvariant and Strelka2 (Commands in GIAB folder).  
 In order to evaluate correctly the precision and recall for each variant caller in real sample (NA12878) we just used the variants in conservative genome regions provided by Genome In A Bottle Consortium (GIAB)(https://www.nist.gov/programs-projects/genome-bottle). Further description of filters applied and model creation can be found in supplementary materials of [original paper](https://www.biorxiv.org/content/10.1101/2021.07.20.453041v1).  
 
+Execution:
+
 **Rscript indels_GIAB_model.R**
 
 After the execution of the indels_GIAB_model.Rscript different outputs were generated:  
