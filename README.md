@@ -20,5 +20,5 @@ Code to merge all GCAT samples for each variant type.
 
 Code to genotype Duplications, Translocations and de novo insertions from Pindel calling.
 
-Further in-silico description, files and results can be found in http://cg.bsc.es/GCAT_BSC_iberianpanel/ web
+Further in-silico description, files and results can be found in http://cg.bsc.es/GCAT_BSC_iberianpanel/ web.  
 [GCAT haplotype panel](https://ega-archive.org/datasets/EGAD00010002153) and other sample information can be found in EGA, under accession number  [EGAS00001003018](https://ega-archive.org/studies/EGAS00001003018).
